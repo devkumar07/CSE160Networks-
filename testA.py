@@ -26,11 +26,11 @@ def main():
     s.runTime(200);
     s.runTime(300);
     s.testServer(1,1);
-    s.runTime(60);
+    s.runTime(200);
     s.testClient(4, 2, 5, 3, 25);
-    s.runTime(100);
+    s.runTime(200);
     s.testClientClose(4, 2, 5, 3);
-    s.runTime(100);
+    s.runTime(200);
 
 
 

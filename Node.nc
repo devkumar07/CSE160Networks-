@@ -160,6 +160,7 @@ implementation{
                   }
                }
             }
+            // Add here 
             else if(TOS_NODE_ID == myMsg->dest){
                RouteNode rNode;
                RouteNode *rNode1;
@@ -169,15 +170,21 @@ implementation{
                   uint16_t next;
                   uint8_t index;
                   index = myMsg->payload[1];
-                  dbg(TRANSPORT_CHANNEL, "Syn Packet Arrived from Node %d for Port %d\n", myMsg->src, index);
-                  sockets[index].state = SYN_RCVD;
-                  port_info[0] = myMsg->payload[1];
-                  port_info[1] = myMsg->payload[0];
-                  makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_SYN_ACK, seqNum, (uint8_t *)port_info, PACKET_MAX_PAYLOAD_SIZE);
-                  next = get_next_hop(myMsg->src);
-                  seqNum++;
-                  dbg(TRANSPORT_CHANNEL, "Syn Ack Packet sent to Node %d for Port %d\n", myMsg->src, index);
-                  call Sender.send(sendPackage, next);
+                  if(sockets[index].state == LISTEN){
+                     dbg(TRANSPORT_CHANNEL, "Syn Packet Arrived from Node %d for Port %d\n", myMsg->src, index);
+                     sockets[index].state = SYN_RCVD;
+                     port_info[0] = myMsg->payload[1];
+                     port_info[1] = myMsg->payload[0];
+                     makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_SYN_ACK, seqNum, (uint8_t *)port_info, PACKET_MAX_PAYLOAD_SIZE);
+                     next = get_next_hop(myMsg->src);
+                     seqNum++;
+                     dbg(TRANSPORT_CHANNEL, "Syn Ack Packet sent to Node %d for Port %d\n", myMsg->src, index);
+                     call Sender.send(sendPackage, next);
+                  }
+                  else{
+                     dbg(TRANSPORT_CHANNEL, "Unable to open port because Server port was not open\n");
+                  }
+                  
                }
                else if (myMsg->protocol == PROTOCOL_SYN_ACK){
                   uint8_t index;
@@ -188,8 +195,14 @@ implementation{
                else if (myMsg->protocol == PROTOCOL_FIN){
                   uint8_t index;
                   index = myMsg->payload[0];
-                  dbg(TRANSPORT_CHANNEL, "Terminating server communication for node %d in port %d and changing state to LISTEN\n",TOS_NODE_ID, index);
-                  sockets[index].state = LISTEN;
+                  if(sockets[index].state == ESTABLISHED){
+                     sockets[index].state = LISTEN;
+                     dbg(TRANSPORT_CHANNEL, "Terminating server communication for node %d in port %d and changing state to LISTEN\n",TOS_NODE_ID, index);
+                  }
+                  else{
+                     dbg(TRANSPORT_CHANNEL, "Cannot change state to LISTEN because server port was not created\n");
+                  }
+                  
                }
                //Sending routing table contents to the neighbor who asked for it.
                else if (myMsg->protocol == PROTOCOL_LINKEDLIST){
@@ -245,6 +258,7 @@ implementation{
                   dbg(ROUTING_CHANNEL, "Packet has arrived! %s\n", myMsg->payload);
                } 
             }
+            // Add here 2 
             else{
                //Rerouting for link layer packets
                if(myMsg->protocol == PROTOCOL_LINKEDLIST){
@@ -340,7 +354,7 @@ implementation{
 
    event void CommandHandler.setTestServer(uint8_t socket_in){
       sockets[socket_in].state = LISTEN;
-      call TCP_Timer.startPeriodic(60000);
+      call TCP_Timer.startPeriodic(100000);
    }
 
    event void CommandHandler.setTestClient(uint16_t source_socket, uint16_t target_addr, uint16_t target_socket, uint16_t data){
@@ -351,7 +365,7 @@ implementation{
       sockets[source_socket].dest.port = target_socket;
       sockets[source_socket].RTT = data * 10;
       //dbg(GENERAL_CHANNEL, "target_socket: %d\n", target_socket);
-      call TCP_Timer.startPeriodic(60000);
+      call TCP_Timer.startPeriodic(100000);
    }
 
    event void CommandHandler.setClientClose(uint8_t client_addr, uint8_t dest_addr, uint8_t srcPort, uint8_t destPort){
@@ -467,9 +481,7 @@ implementation{
 		}
    }
    void send_syn(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort){
-      uint16_t i = 0;
       uint16_t nexHop = get_next_hop(dest_addr);
-      RouteNode r;
       dbg(GENERAL_CHANNEL, "Target Node: %d\n", dest_addr);
       port_info[0] = srcPort;
       port_info[1] = destPort;

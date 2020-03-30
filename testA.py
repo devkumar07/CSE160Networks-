@@ -25,10 +25,10 @@ def main():
     # After sending a ping, simulate a little to prevent collision.
     s.runTime(200);
     s.runTime(300);
-    s.testServer(1,1);
+    s.testServer(2,3);
     s.runTime(200);
     s.testClient(4, 2, 5, 3, 25);
-    s.runTime(200);
+    s.runTime(300);
     s.testClientClose(4, 2, 5, 3);
     s.runTime(200);
 

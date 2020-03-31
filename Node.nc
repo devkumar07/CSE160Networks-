@@ -1,4 +1,4 @@
-/* I collaborated with Jonathan Srinivasan for the code and I collaborated/discussed design ideas implementation with jonathan S and Keerthana M. However, Jonathan and I are in one team and Keerthana is doing it herself.
+/* I collaborated with Keerthana Madadi for the code and I collaborated/discussed design ideas implementation with jonathan S and Keerthana M. However, Keerthana and I are in one team and Jonathan is doing it himself.
  * ANDES Lab - University of California, Merced
  * This class provides the basic functions of a network node.
  *

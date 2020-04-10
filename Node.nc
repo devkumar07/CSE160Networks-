@@ -45,7 +45,7 @@ implementation{
    void createRoutingTable();
    void printRoute();
    void send_syn(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort);
-   void send_TCP(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort);
+   void send_TCP(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort, uint8_t seqNum);
    uint16_t get_next_hop(uint16_t dest);
 
    event void Boot.booted(){
@@ -77,6 +77,7 @@ implementation{
 
    event void TCP_Timer.fired(){
       uint8_t i = 0; 
+      uint8_t j = 0;
       for(i = 0; i < MAX_NUM_OF_SOCKETS; i++){
          if(sockets[i].state == SYN_SENT){
             send_syn(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
@@ -87,7 +88,11 @@ implementation{
          else if(sockets[i].state == ESTABLISHED){
             //client
             if (sockets[i].flag == TOS_NODE_ID){
-               send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
+               for(j = 0; j < SOCKET_BUFFER_SIZE; j++){
+                  send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port, seqNum);
+                  seqNum++;
+               }
+               //send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
             }
             //server
             else{
@@ -239,7 +244,7 @@ implementation{
                      call TCP_Timeout.stop();
                      nextPacket = !nextPacket;
                      //dbg(TRANSPORT_CHANNEL, "Next Packet %d\n", nextPacket);
-                     send_TCP(sockets[socket].src, sockets[socket].dest.addr, sockets[socket].dest.port);
+                     send_TCP(sockets[socket].src, sockets[socket].dest.addr, sockets[socket].dest.port, seqNum);
                    
                   }
                   
@@ -550,16 +555,17 @@ implementation{
       call Sender.send(sendPackage, nexHop);
    }
 
-   void send_TCP(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort){
+   void send_TCP(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort, uint8_t seq){
 
          uint16_t nexHop = get_next_hop(dest_addr);
          dbg(TRANSPORT_CHANNEL, "TCP Target Node: %d\n", dest_addr);
+         dbg(TRANSPORT_CHANNEL, "Sending seqNum: %d\n", seqNum);
          port_info[0] = srcPort;
          port_info[1] = destPort;
          port_info[2] = nextPacket;
          socket = srcPort;
          dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
-         makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
+         makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seq, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
          call TCP_Timeout.startOneShot(4000);
          //call TCP_Timeout.startOneShot(4 * sockets[srcPort].RTT);
          call Sender.send(sendPackage, nexHop);

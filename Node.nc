@@ -536,6 +536,8 @@ implementation{
 			}
 		}
    }
+
+   //changes by keerthana here!!!!
    void send_syn(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort){
       uint16_t nexHop = get_next_hop(dest_addr);
       dbg(GENERAL_CHANNEL, "Target Node: %d\n", dest_addr);
@@ -576,3 +578,5 @@ implementation{
       return -1;
    }
 }
+
+

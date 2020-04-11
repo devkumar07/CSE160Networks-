@@ -239,7 +239,7 @@ implementation{
                   packets_receiver[myMsg->payload[2]] = 1;
                   makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)port_info, PACKET_MAX_PAYLOAD_SIZE);
                   next = get_next_hop(myMsg->src);
-                  dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1],myMsg->payload[2]);
+                  dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1], myMsg->payload[2]);
                   call Sender.send(sendPackage, next);
                }
                else if (myMsg->protocol == PROTOCOL_ACK){
@@ -252,7 +252,7 @@ implementation{
                      //dbg(TRANSPORT_CHANNEL, "Next Packet %d\n", nextPacket);
                      uint8_t j = 1;
                      for(j = 1; j <= 4; j++){
-                        dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1],myMsg->payload[2]);
+                        dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1],nextPacket);
                         send_TCP(sockets[socket].src, sockets[socket].dest.addr, sockets[socket].dest.port);
                      }
                   }

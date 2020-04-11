@@ -249,13 +249,6 @@ implementation{
                   dbg(TRANSPORT_CHANNEL, "ACK received: %d\n", myMsg->payload[2]);
                   call TCP_Timeout.stop();
                   if(myMsg->payload[2] % 4 == 0){
-                     //nextPacket = !nextPacket;
-                     //dbg(TRANSPORT_CHANNEL, "Next Packet %d\n", nextPacket);
-                     /*uint8_t j = 1;
-                     for(j = 1; j <= 4; j++){
-                        dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, myMsg->payload[1], myMsg->src, myMsg->payload[0], nextPacket);
-                        send_TCP(sockets[socket].src, sockets[socket].dest.addr, sockets[socket].dest.port);
-                     }*/
                      call TCP_Timer.startPeriodic(10000);
                   }
                   //sockets[myMsg->payload[1]].state = CLOSED;
@@ -578,7 +571,7 @@ implementation{
          socket = srcPort;
          //dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
          makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
-         dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, port_info[1], dest_addr, port_info[0], nextPacket);
+         dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, port_info[0], dest_addr, port_info[1], nextPacket);
          nextPacket++;
          call TCP_Timeout.startOneShot(4000);
          //call TCP_Timeout.startOneShot(4 * sockets[srcPort].RTT);

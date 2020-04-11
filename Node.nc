@@ -209,6 +209,7 @@ implementation{
                      call Sender.send(sendPackage, next);
                   }
                   else{
+                     dbg(TRANSPORT_CHANNEL, "state: %s\n", sockets[index].state);
                      dbg(TRANSPORT_CHANNEL, "Unable to open port because Server port was not open\n");
                   }
                   
@@ -239,7 +240,7 @@ implementation{
                   packets_receiver[myMsg->payload[2]] = 1;
                   makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)port_info, PACKET_MAX_PAYLOAD_SIZE);
                   next = get_next_hop(myMsg->src);
-                  dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1], myMsg->payload[2]);
+                  dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, myMsg->payload[1], myMsg->src, myMsg->payload[0], myMsg->payload[2]);
                   call Sender.send(sendPackage, next);
                }
                else if (myMsg->protocol == PROTOCOL_ACK){
@@ -250,11 +251,12 @@ implementation{
                   if(myMsg->payload[2] % 4 == 0){
                      //nextPacket = !nextPacket;
                      //dbg(TRANSPORT_CHANNEL, "Next Packet %d\n", nextPacket);
-                     uint8_t j = 1;
+                     /*uint8_t j = 1;
                      for(j = 1; j <= 4; j++){
-                        dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1],nextPacket);
+                        dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, myMsg->payload[1], myMsg->src, myMsg->payload[0], nextPacket);
                         send_TCP(sockets[socket].src, sockets[socket].dest.addr, sockets[socket].dest.port);
-                     }
+                     }*/
+                     call TCP_Timer.startPeriodic(10000);
                   }
                   //sockets[myMsg->payload[1]].state = CLOSED;
                }
@@ -423,7 +425,7 @@ implementation{
 
    event void CommandHandler.setTestServer(uint8_t socket_in){
       sockets[socket_in].state = LISTEN;
-      call TCP_Timer.startPeriodic(100000);
+      call TCP_Timer.startPeriodic(10000);
    }
 
    event void CommandHandler.setTestClient(uint16_t source_socket, uint16_t target_addr, uint16_t target_socket, uint16_t data){
@@ -434,7 +436,7 @@ implementation{
       sockets[source_socket].dest.port = target_socket;
       sockets[source_socket].RTT = data * 10;
       dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[source_socket].RTT);
-      call TCP_Timer.startPeriodic(100000);
+      call TCP_Timer.startPeriodic(10000);
    }
 
    event void CommandHandler.setClientClose(uint8_t client_addr, uint8_t dest_addr, uint8_t srcPort, uint8_t destPort){
@@ -568,14 +570,15 @@ implementation{
    void send_TCP(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort){
 
          uint16_t nexHop = get_next_hop(dest_addr);
-         dbg(TRANSPORT_CHANNEL, "TCP Target Node: %d\n", dest_addr);
-         dbg(TRANSPORT_CHANNEL, "Sending seqNum: %d\n", nextPacket);
+         //dbg(TRANSPORT_CHANNEL, "TCP Target Node: %d\n", dest_addr);
+         //dbg(TRANSPORT_CHANNEL, "Sending seqNum: %d\n", nextPacket);
          port_info[0] = srcPort;
          port_info[1] = destPort;
          port_info[2] = nextPacket;
          socket = srcPort;
-         dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
+         //dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
          makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
+         dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, port_info[1], dest_addr, port_info[0], nextPacket);
          nextPacket++;
          call TCP_Timeout.startOneShot(4000);
          //call TCP_Timeout.startOneShot(4 * sockets[srcPort].RTT);

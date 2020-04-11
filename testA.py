@@ -24,13 +24,23 @@ def main():
 
     # After sending a ping, simulate a little to prevent collision.
     s.runTime(200);
+    s.testServer(1, 2);
     s.runTime(300);
-    s.testServer(2,3);
     s.runTime(200);
-    s.testClient(4, 2, 5, 3, 25);
+    s.testServer(1, 3);
     s.runTime(300);
-    s.testClientClose(4, 2, 5, 3);
+    #source, source socket, dest, dest socket, data
+    s.testClient(2, 1, 1, 3, 25); #char value limit of 255 on transfer...
     s.runTime(200);
+    s.testClient(4, 1, 1, 2, 25);
+    s.runTime(200);
+    #s.testClient(3, 4, 1, 1, 25);
+#        s.testClient(4, 1, 1, 1, 30); #char value limit of 255 on transfer...
+    s.runTime(300);
+    s.testClientClose(2, 1, 1, 3);
+    s.testClientClose(4, 1, 1, 2);
+    s.runTime(800);
+    #s.testClientClose(4, 1, 1, 2);
 
 
 

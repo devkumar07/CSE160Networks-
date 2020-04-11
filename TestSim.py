@@ -144,7 +144,7 @@ def main():
     s = TestSim();
     s.runTime(10);
     s.loadTopo("test.topo");
-    s.loadNoise("no_noise.txt");
+    s.loadNoise("meyer-heavy.txt");
     s.bootAll();
     s.addChannel(s.COMMAND_CHANNEL);
     s.addChannel(s.GENERAL_CHANNEL);

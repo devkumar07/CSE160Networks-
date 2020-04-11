@@ -11,7 +11,7 @@ def main():
     s.loadTopo("tuna-melt.topo");
 
     # Add a noise model to all of the motes.
-    s.loadNoise("no_noise.txt");
+    s.loadNoise("meyer-heavy.txt");
 
     # Turn on all of the sensors.
     s.bootAll();
@@ -27,19 +27,20 @@ def main():
     s.testServer(1, 2);
     s.runTime(60);
     s.runTime(50);
-    s.testServer(1, 3);
+    s.testServer(2, 3);
     s.runTime(50);
-    #source, source socket, dest, dest socket, data
-    s.testClient(2, 1, 1, 3, 25); #char value limit of 255 on transfer...
+    #source, dest, srcPort, destPort, data
+    s.testClient(7, 2, 4, 3, 25); #char value limit of 255 on transfer...
     s.runTime(60);
-    s.testClient(4, 1, 1, 2, 25);
-    s.runTime(60);
-    s.runTime(50);
-    s.testClientClose(2, 1, 1, 3);
+    s.testClient(9, 1, 5, 2, 25);
     s.runTime(60);
     s.runTime(50);
-    s.testClientClose(4, 1, 1, 2);
+    #src, dest, destPort, srcPort
+    s.testClientClose(7, 2, 3, 4);
     s.runTime(60);
+    s.runTime(60);
+    s.testClientClose(9, 1, 2, 5);
+    s.runTime(280);
 
 
 if __name__ == '__main__':

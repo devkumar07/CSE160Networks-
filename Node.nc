@@ -109,7 +109,7 @@ implementation{
    }
 
    event void TCP_Timeout.fired(){
-      dbg(TRANSPORT_CHANNEL, "Timeout for %d\n", nextPacket);
+      dbg(TRANSPORT_CHANNEL, "Timeout for %d going from %d in port %d\n", nextPacket, TOS_NODE_ID, sockets[socket].src);
    }
 
 
@@ -432,7 +432,7 @@ implementation{
       call TCP_Timer.startPeriodic(10000);
    }
 
-   event void CommandHandler.setClientClose(uint8_t client_addr, uint8_t dest_addr, uint8_t srcPort, uint8_t destPort){
+   event void CommandHandler.setClientClose(uint8_t client_addr, uint8_t dest_addr, uint8_t destPort, uint8_t srcPort){
       uint16_t nexHop = get_next_hop(dest_addr);
       sockets[srcPort].state = CLOSED;
       port_info[0] = destPort;

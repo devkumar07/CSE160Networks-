@@ -35,12 +35,8 @@ implementation{
    socket_store_t sockets [MAX_NUM_OF_SOCKETS];
    socket_store_t s;
    uint8_t socket;
-   uint8_t retransmit_index = 0;
    uint16_t nextPacket = 0;
    uint8_t port_info [PACKET_MAX_PAYLOAD_SIZE];
-   uint32_t timeouts [10000];
-   bool packets_sender [10000];
-   bool packets_receiver[10000];
    // Prototypes
    void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t Protocol, uint16_t seq, uint8_t *payload, uint8_t length);
    bool checkExistsPacket(pack *Package);
@@ -52,7 +48,6 @@ implementation{
    void send_syn(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort);
    void send_TCP(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort);
    uint16_t get_next_hop(uint16_t dest);
-   void retransmit(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort, uint8_t index);
 
    event void Boot.booted(){
       call AMControl.start();
@@ -98,17 +93,8 @@ implementation{
                sockets[i].nextExpected = nextPacket + 5;
                call TCP_Timeout.startOneShot(6000);
                for(j = 1; j <= 4; j++){
-                  //uint32_t timer; 
-                  //timeouts[nextPacket] = call TCP_Timeout.getNow() + sockets[i].RTT;
-                  //dbg(TRANSPORT_CHANNEL, "New window being sent");
                   send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
-                  //nextPacket++;
                }
-               //send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
-            }
-            //server
-            else{
-
             }
          }
       }
@@ -119,11 +105,9 @@ implementation{
       for(i = 0; i < MAX_NUM_OF_SOCKETS; i++){
          if(sockets[i].state == ESTABLISHED){
             if (sockets[i].flag == TOS_NODE_ID){
-               dbg(TRANSPORT_CHANNEL, "Timeout for next %d going from %d in port %d\n", sockets[i].lastAck + 1, TOS_NODE_ID, sockets[i].src);
+               dbg(TRANSPORT_CHANNEL, "Timeout called. Received up to %d packets for going from %d in port %d\n", sockets[i].lastAck, TOS_NODE_ID, sockets[i].src);
                nextPacket = sockets[i].lastAck;
                call TCP_Timer.startPeriodic(10000);
-               //retransmit(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port, nextPacket);
-               //break;
             }
          }
       }
@@ -254,7 +238,6 @@ implementation{
                   port_info[0] = myMsg->payload[1];
                   port_info[1] = myMsg->payload[0];
                   port_info[2] = myMsg->payload[2];
-                  packets_receiver[myMsg->payload[2]] = 1;
                   makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)port_info, PACKET_MAX_PAYLOAD_SIZE);
                   next = get_next_hop(myMsg->src);
                   dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, myMsg->payload[1], myMsg->src, myMsg->payload[0], myMsg->payload[2]);
@@ -262,19 +245,12 @@ implementation{
                }
                else if (myMsg->protocol == PROTOCOL_ACK){
                   uint8_t k = 0;
-                  //packets_sender[myMsg->payload[2]] = 1;
                   dbg(TRANSPORT_CHANNEL, "ACK received from node %d port %d to node %d port %d for seqNum %d \n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1],myMsg->payload[2]);
                   if(myMsg->payload[2] - sockets[myMsg->payload[1]].lastAck == 1){
                      sockets[myMsg->payload[1]].lastAck = myMsg->payload[2];
                      sockets[myMsg->payload[1]].nextExpected++;
                      send_TCP(myMsg->payload[1], myMsg->src, myMsg->payload[0]); 
-                     //call TCP_Timer.startPeriodic(10000);
                   }
-                  //call TCP_Timeout.stop();
-                  /*if(myMsg->payload[2] % 4 == 0){
-                     call TCP_Timer.startPeriodic(10000);
-                  }*/
-                  //sockets[myMsg->payload[1]].state = CLOSED;
                }
 
                //Sending routing table contents to the neighbor who asked for it.
@@ -616,26 +592,6 @@ implementation{
       }
       return -1;
    }
-   void retransmit(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort, uint8_t index){
-         uint16_t nexHop = get_next_hop(dest_addr);
-         port_info[0] = srcPort;
-         port_info[1] = destPort;
-         port_info[2] = index;
-         socket = srcPort;
-         makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
-         dbg(TRANSPORT_CHANNEL, "Retransmission sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, port_info[0], dest_addr, port_info[1], index);
-         call TCP_Timeout.startOneShot(6000);
-         //call TCP_Timeout.startOneShot(4 * sockets[srcPort].RTT);
-         call Sender.send(sendPackage, nexHop);
-   }
-   /*
-   void initialize_tcp_list(){
-      uint8_t i = 0;
-      for (i = 0; i < 10000; i++){
-         packets_sender[i] = 0;
-         packets_receiver[i] = 0;
-      }
-   }*/
 }
 
 

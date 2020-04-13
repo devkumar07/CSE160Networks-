@@ -100,6 +100,7 @@ implementation{
                for(j = 1; j <= 4; j++){
                   //uint32_t timer; 
                   //timeouts[nextPacket] = call TCP_Timeout.getNow() + sockets[i].RTT;
+                  //dbg(TRANSPORT_CHANNEL, "New window being sent");
                   send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
                   //nextPacket++;
                }
@@ -118,7 +119,7 @@ implementation{
       for(i = 0; i < MAX_NUM_OF_SOCKETS; i++){
          if(sockets[i].state == ESTABLISHED){
             if (sockets[i].flag == TOS_NODE_ID){
-               dbg(TRANSPORT_CHANNEL, "Timeout for packet %d going from %d in port %d\n", sockets[i].lastAck+1, TOS_NODE_ID, sockets[i].src);
+               dbg(TRANSPORT_CHANNEL, "Timeout for next %d going from %d in port %d\n", sockets[i].lastAck + 1, TOS_NODE_ID, sockets[i].src);
                nextPacket = sockets[i].lastAck;
                call TCP_Timer.startPeriodic(10000);
                //retransmit(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port, nextPacket);
@@ -261,11 +262,14 @@ implementation{
                }
                else if (myMsg->protocol == PROTOCOL_ACK){
                   uint8_t k = 0;
-                  packets_sender[myMsg->payload[2]] = 1;
+                  //packets_sender[myMsg->payload[2]] = 1;
+                  dbg(TRANSPORT_CHANNEL, "ACK received from node %d port %d to node %d port %d for seqNum %d \n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1],myMsg->payload[2]);
                   if(myMsg->payload[2] - sockets[myMsg->payload[1]].lastAck == 1){
                      sockets[myMsg->payload[1]].lastAck = myMsg->payload[2];
+                     sockets[myMsg->payload[1]].nextExpected++;
+                     send_TCP(myMsg->payload[1], myMsg->src, myMsg->payload[0]); 
+                     //call TCP_Timer.startPeriodic(10000);
                   }
-                  dbg(TRANSPORT_CHANNEL, "ACK received from node %d port %d to node %d port %d for seqNum %d \n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1],myMsg->payload[2]);
                   //call TCP_Timeout.stop();
                   /*if(myMsg->payload[2] % 4 == 0){
                      call TCP_Timer.startPeriodic(10000);

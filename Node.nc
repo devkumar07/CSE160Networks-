@@ -90,7 +90,7 @@ implementation{
          else if(sockets[i].state == ESTABLISHED){
             //client
             if (sockets[i].flag == TOS_NODE_ID && nextPacket <=250){
-               dbg(TRANSPORT_CHANNEL, "size: %d\n",sockets[i].effectiveWindow);
+               //dbg(TRANSPORT_CHANNEL, "size: %d\n",sockets[i].effectiveWindow);
                sockets[i].nextExpected = nextPacket + sockets[i].effectiveWindow+1;
                call TCP_Timeout.startOneShot(8000);
                for(j = 0; j <= sockets[i].effectiveWindow+1; j++){

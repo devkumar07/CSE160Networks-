@@ -8,10 +8,10 @@ def main():
     s.runTime(1);
 
     # Load the the layout of the network.
-    s.loadTopo("pizza.topo");
+    s.loadTopo("circle.topo");
 
     # Add a noise model to all of the motes.
-    s.loadNoise("some_noise.txt");
+    s.loadNoise("no_noise.txt");
 
     # Turn on all of the sensors.
     s.bootAll();
@@ -23,15 +23,17 @@ def main():
     #s.addChannel(s.ROUTING_CHANNEL);
 
     # After sending a ping, simulate a little to prevent collision.
-    s.runTime(50);
+    s.runTime(500);
     #s.testServer(1, 2);
-    s.runTime(60);
+    #s.runTime(200);
     #s.runTime(100);
-    s.testServer(4, 7);
+    s.testServer(8, 7);
     s.runTime(50);
+
+    s.runTime(500);
     #source, dest, srcPort, destPort, data
-    s.testClient(7, 4, 4, 7, 25); #char value limit of 255 on transfer...
-    s.runTime(60);
+    s.testClient(9, 8, 4, 7, 250); #char value limit of 255 on transfer...
+    s.runTime(8000);
     #s.testClient(9, 1, 5, 2, 25);
     s.runTime(60);
     s.runTime(50);

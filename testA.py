@@ -8,7 +8,7 @@ def main():
     s.runTime(1);
 
     # Load the the layout of the network.
-    s.loadTopo("circle.topo");
+    s.loadTopo("house.topo");
 
     # Add a noise model to all of the motes.
     s.loadNoise("no_noise.txt");
@@ -30,9 +30,9 @@ def main():
     s.testServer(8, 7);
     s.runTime(50);
 
-    s.runTime(500);
+    #s.runTime(500);
     #source, dest, srcPort, destPort, data
-    s.testClient(9, 8, 4, 7, 250); #char value limit of 255 on transfer...
+    s.testClient(1, 8, 4, 7, 250); #char value limit of 255 on transfer...
     s.runTime(8000);
     #s.testClient(9, 1, 5, 2, 25);
     s.runTime(60);

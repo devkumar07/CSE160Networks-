@@ -38,6 +38,7 @@ implementation{
    uint8_t socket;
    uint16_t nextPacket = 0;
    uint8_t port_info [PACKET_MAX_PAYLOAD_SIZE];
+   uint16_t congestionWindow = 0;
    // Prototypes
    void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t Protocol, uint16_t seq, uint8_t *payload, uint8_t length);
    bool checkExistsPacket(pack *Package);
@@ -137,7 +138,12 @@ implementation{
                dbg(TRANSPORT_CHANNEL, "Timeout called. Received up to %d packets for going from %d in port %d\n", sockets[i].lastAck, TOS_NODE_ID, sockets[i].src);
                   nextPacket = sockets[i].lastAck;
                   //if(sockets[i].effectiveWindow == 0){
-                     sockets[i].effectiveWindow = 3;
+                     sockets[i].effectiveWindow = congestionWindow/2;
+                     if(sockets[i].effectiveWindow <= 0){
+                        sockets[i].effectiveWindow = 1;
+                     }
+                     congestionWindow = sockets[i].effectiveWindow;
+                     dbg(TRANSPORT_CHANNEL, "TIMEOUT Congestion Window %d\n", congestionWindow);
                   //}
                   //call TCP_Timer.startPeriodic(10000);
                   sockets[i].nextExpected = nextPacket + sockets[i].effectiveWindow+1;
@@ -149,6 +155,8 @@ implementation{
                   }
                }
             }
+
+            
          }
       }
    }
@@ -253,7 +261,7 @@ implementation{
                      sockets[index].src = TOS_NODE_ID;
                      sockets[index].dest.addr = myMsg->src;
                      sockets[index].dest.port = myMsg->payload[0];
-                     sockets[index].RTT = 8000;
+                     sockets[index].RTT = 15000;
                      call TCP_Timer.stop();
                      //dbg(TRANSPORT_CHANNEL, "Values assigned succesfully\n");
                      call TCP_Timer.startOneShot(sockets[i].RTT * 2);
@@ -279,9 +287,7 @@ implementation{
                   index = myMsg->payload[1];
                   call TCP_Timer.stop();
                   sockets[index].state = ESTABLISHED;
-                  sockets[index].effectiveWindow = myMsg->payload[3];
                   dbg(TRANSPORT_CHANNEL, "Connection ESTABLISHED for node %d in port %d\n", TOS_NODE_ID, index);
-                  dbg(TRANSPORT_CHANNEL, "Effective Window: %d\n", sockets[index].effectiveWindow);
                   call TCP_Timer.startPeriodic(10000);
                }
                else if (myMsg->protocol == PROTOCOL_FIN){
@@ -298,27 +304,35 @@ implementation{
                }
                else if (myMsg->protocol == PROTOCOL_TCP){
                   uint16_t next;
-                  if(sockets[myMsg->payload[1]].state == SYN_RCVD){
-                     dbg(TRANSPORT_CHANNEL, "Changing receiver state to established\n");
-                     sockets[myMsg->payload[1]].state = ESTABLISHED;
+                  if(myMsg->payload[3] > 5){
+                     dbg(TRANSPORT_CHANNEL, "CONGESTION WINDOW: %d, greater than 5\n", myMsg->payload[3]);
+                     call TCP_Timeout.startOneShot(0);
+
                   }
-                  port_info[0] = myMsg->payload[1];
-                  port_info[1] = myMsg->payload[0];
-                  port_info[2] = myMsg->payload[2];
-                  makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)port_info, PACKET_MAX_PAYLOAD_SIZE);
-                  next = get_next_hop(myMsg->src);
-                  dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, myMsg->payload[1], myMsg->src, myMsg->payload[0], myMsg->payload[2]);
-                  call Sender.send(sendPackage, next);
+                  else{
+                     if(sockets[myMsg->payload[1]].state == SYN_RCVD){
+                        dbg(TRANSPORT_CHANNEL, "Changing receiver state to established\n");
+                        sockets[myMsg->payload[1]].state = ESTABLISHED;
+                     }
+                     port_info[0] = myMsg->payload[1];
+                     port_info[1] = myMsg->payload[0];
+                     port_info[2] = myMsg->payload[2];
+                     makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)port_info, PACKET_MAX_PAYLOAD_SIZE);
+                     next = get_next_hop(myMsg->src);
+                     dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, myMsg->payload[1], myMsg->src, myMsg->payload[0], myMsg->payload[2]);
+                     call Sender.send(sendPackage, next);
+                  }
                }
                else if (myMsg->protocol == PROTOCOL_ACK){
                    uint8_t k = 0;
                    call TCP_Timeout.stop();
                   dbg(TRANSPORT_CHANNEL, "ACK received from node %d port %d to node %d port %d for seqNum %d \n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1],myMsg->payload[2]);
                   //sockets[myMsg->payload[1]].effectiveWindow = myMsg->payload[3];
-                  if(sockets[myMsg->payload[1]].effectiveWindow < 3){
                      sockets[myMsg->payload[1]].effectiveWindow++;
+                     congestionWindow++;
+                     dbg(TRANSPORT_CHANNEL, "effective Window: %d\n", sockets[myMsg->payload[1]].effectiveWindow); 
                      dbg(TRANSPORT_CHANNEL, "Able to send another %d packet(s) from the effective window\n", sockets[myMsg->payload[1]].effectiveWindow);
-                  }
+                  
                   if(myMsg->payload[2] - sockets[myMsg->payload[1]].lastAck == 1){
                      sockets[myMsg->payload[1]].lastAck = myMsg->payload[2];
                      dbg(TRANSPORT_CHANNEL, "Received upto %d packet(s) \n", sockets[myMsg->payload[1]].lastAck);
@@ -526,6 +540,9 @@ implementation{
       sockets[source_socket].dest.port = target_socket;
       sockets[source_socket].RTT = 8000;
       dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[source_socket].RTT);
+      sockets[source_socket].effectiveWindow = 1;
+      congestionWindow = 1;
+      dbg(TRANSPORT_CHANNEL, "Congestion Window: %d\n", congestionWindow);
       call TCP_Timer.startOneShot(sockets[source_socket].RTT * 2);
       //send_syn(source_socket,sockets[source_socket].dest.addr,sockets[source_socket].dest.port);
       //call TCP_Timer.startPeriodic(100000);
@@ -667,7 +684,6 @@ implementation{
       //dbg(GENERAL_CHANNEL, "Target Node: %d\n", dest_addr);
       port_info[0] = srcPort;
       port_info[1] = destPort;
-      port_info[3] = 3;
       //printRoute();
       // /dbg(GENERAL_CHANNEL, "want to open port: %d\n", port_info[1]);
       makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_SYN_ACK, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
@@ -690,7 +706,7 @@ implementation{
          port_info[0] = srcPort;
          port_info[1] = destPort;
          port_info[2] = nextPacket;
-         port_info[3] = sockets[srcPort].effectiveWindow;
+         port_info[3] = congestionWindow;
          socket = srcPort;
          //dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
          makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);

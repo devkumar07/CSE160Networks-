@@ -38,22 +38,16 @@ def main():
 
     #s.runTime(500);
     #source, dest, srcPort, destPort, data
-    s.testClient(9, 8, 4, 7, 250); #char value limit of 255 on transfer...
-    s.runTime(800);
-    #s.testClient(9, 1, 5, 2, 25);
-    s.runTime(60);
-    s.runTime(50);
-    #src, dest, destPort, srcPort
-    s.testClientClose(9, 8, 7, 4);
-    s.testClient(10, 8, 4, 7, 250); #char value limit of 255 on transfer...
-    s.runTime(200);
+    #s.testClient(9, 8, 4, 7, 250); #char value limit of 255 on transfer...
+    #s.runTime(800);
+
     s.testClient(10, 6, 5, 3, 250);
-    s.runTime(200);
+    s.runTime(800);
     #src, dest, destPort, srcPort
-    #s.testClientClose(10, 8, 7, 4);
-    s.runTime(60);
-    s.runTime(60);
-    #s.testClientClose(9, 1, 2, 5);
+    #s.testClientClose(9, 8, 7, 4);
+    #s.runTime(200);
+    #s.runTime(60);
+    s.testClientClose(10, 6, 3, 5);
     s.runTime(280);
 
 

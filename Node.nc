@@ -34,6 +34,7 @@ implementation{
    uint16_t seqNum = 0;
    socket_store_t sockets [MAX_NUM_OF_SOCKETS];
    socket_store_t s;
+   uint8_t delay =0;
    uint8_t socket;
    uint16_t nextPacket = 0;
    uint8_t port_info [PACKET_MAX_PAYLOAD_SIZE];
@@ -59,7 +60,7 @@ implementation{
    event void AMControl.startDone(error_t err){
       if(err == SUCCESS){
          call periodicTimer.startPeriodic(5000);
-         call periodicTimer1.startPeriodic(6000);
+         //call periodicTimer1.startPeriodic(6000);
          /*dbg(GENERAL_CHANNEL, "Time %d\n",call periodicTimer.getNow());
          if(call periodicTimer.getNow() > 2000){
             dbg(GENERAL_CHANNEL, "in here\n",call periodicTimer.getNow());
@@ -78,6 +79,10 @@ implementation{
    //Random firing for neighborDiscovery
    event void periodicTimer.fired(){
       discoverNeighbors();
+      if(delay > 5){
+         createRoutingTable();
+      }
+      delay++;
       //dbg(GENERAL_CHANNEL, "Time %d\n",call periodicTimer.getNow());
       /*if(call periodicTimer.getNow() > 10000){
          //dbg(GENERAL_CHANNEL, "in here\n",call periodicTimer.getNow());
@@ -96,7 +101,7 @@ implementation{
       for(i = 0; i < MAX_NUM_OF_SOCKETS; i++){
          if(sockets[i].state == SYN_SENT){
             dbg(TRANSPORT_CHANNEL, "In SYN_SYN\n");
-            //printRoute();
+            ////printRoute();
             call TCP_Timer.startOneShot(sockets[i].RTT * 2);
             send_syn(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
          }
@@ -243,13 +248,13 @@ implementation{
                   uint8_t index;
                   index = myMsg->payload[1];
                   if(sockets[index].state == LISTEN){
-                     call TCP_Timer.stop();
                      dbg(TRANSPORT_CHANNEL, "Syn Packet Arrived from Node %d for Port %d\n", myMsg->src, index);
                      sockets[index].state = SYN_RCVD;
                      sockets[index].src = TOS_NODE_ID;
                      sockets[index].dest.addr = myMsg->src;
                      sockets[index].dest.port = myMsg->payload[0];
-                     sockets[index].RTT = 15000;
+                     sockets[index].RTT = 8000;
+                     call TCP_Timer.stop();
                      //dbg(TRANSPORT_CHANNEL, "Values assigned succesfully\n");
                      call TCP_Timer.startOneShot(sockets[i].RTT * 2);
                      //call TCP_Timer.startPeriodic(100000);
@@ -371,11 +376,11 @@ implementation{
                      temp.cost = (r->cost);
                      call RouteTable.pushback(temp);
                   }
-                  //printRoute();
+                  ////printRoute();
                }
                //Ping Packet has reached destination
                else if (myMsg->protocol == PROTOCOL_PING){
-                  //printRoute();
+                  ////printRoute();
                   dbg(ROUTING_CHANNEL, "Packet has arrived! %s\n", myMsg->payload);
                } 
             }
@@ -386,7 +391,7 @@ implementation{
                   uint i = 0;
                   RouteNode r;
                   //dbg(ROUTING_CHANNEL, "REROUTING\n");
-                  //printRoute();
+                  ////printRoute();
                   for (i = 0; i < call RouteTable.size(); i++){
                      r = call RouteTable.get(i);
                      if((uint16_t)myMsg->dest == (uint16_t)r.dest){
@@ -400,7 +405,7 @@ implementation{
                         break;
                      }
                   }
-                  //printRoute();
+                  ////printRoute();
                   if(i == call RouteTable.size()){
                      dbg(GENERAL_CHANNEL, "No Path Found\n");
                   }
@@ -421,7 +426,7 @@ implementation{
                   addPacketList(sendPackage);
 
                   //dbg(TRANSPORT_CHANNEL, "REROUTING for the ping event from\n");
-                  printRoute();
+                  //printRoute();
                   //if(get_next_hop(myMsg->dest) < 25){
                      dbg(ROUTING_CHANNEL, "REROUTING for the ping event from %d to %d\n",TOS_NODE_ID, get_next_hop(myMsg->dest));
                      call Sender.send(sendPackage, get_next_hop(myMsg->dest));
@@ -483,7 +488,7 @@ implementation{
       RouteNode r;
       dbg(GENERAL_CHANNEL, "PING EVENT \n");
       dbg(GENERAL_CHANNEL, "Packet source %d\n", TOS_NODE_ID);
-      //printRoute();
+      ////printRoute();
       for (i = 0; i < call RouteTable.size(); i++){
          r = call RouteTable.get(i);
          if((destination == (uint16_t) r.dest) && r.cost < 20){
@@ -519,10 +524,10 @@ implementation{
       sockets[source_socket].src = source_socket;
       sockets[source_socket].dest.addr = target_addr;
       sockets[source_socket].dest.port = target_socket;
-      sockets[source_socket].RTT = 15000;
+      sockets[source_socket].RTT = 8000;
       dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[source_socket].RTT);
       call TCP_Timer.startOneShot(sockets[source_socket].RTT * 2);
-      send_syn(source_socket,sockets[source_socket].dest.addr,sockets[source_socket].dest.port);
+      //send_syn(source_socket,sockets[source_socket].dest.addr,sockets[source_socket].dest.port);
       //call TCP_Timer.startPeriodic(100000);
    }
 
@@ -532,7 +537,7 @@ implementation{
       port_info[0] = destPort;
       //dbg(GENERAL_CHANNEL, "want to open port: %d\n", port_info[1]);
       makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_FIN, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
-      //printRoute();
+      ////printRoute();
       call Sender.send(sendPackage, nexHop);
    }
 
@@ -646,7 +651,7 @@ implementation{
       uint16_t nexHop = get_next_hop(dest_addr);
       dbg(GENERAL_CHANNEL, "Target Node: %d\n", dest_addr);
       dbg(GENERAL_CHANNEL, "Nexthop: %d\n", nexHop);
-      printRoute();
+      ////printRoute();
       port_info[0] = srcPort;
       port_info[1] = destPort;
       dbg(GENERAL_CHANNEL, "want to open port: %d\n", port_info[1]);
@@ -663,7 +668,7 @@ implementation{
       port_info[0] = srcPort;
       port_info[1] = destPort;
       port_info[3] = 3;
-      printRoute();
+      //printRoute();
       // /dbg(GENERAL_CHANNEL, "want to open port: %d\n", port_info[1]);
       makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_SYN_ACK, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
       addPacketList(sendPackage);

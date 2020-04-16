@@ -9,7 +9,6 @@ def main():
 
     # Load the the layout of the network.
     s.loadTopo("pizza.topo");
-    s.loadTopo("tuna-melt.topo");
 
     # Add a noise model to all of the motes.
     s.loadNoise("some_noise.txt");

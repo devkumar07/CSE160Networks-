@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.nc": "c",
+        "commandmsg.h": "c"
+    }
+}

@@ -31,14 +31,13 @@ def main():
     #s.testServer(1, 2);
     #s.runTime(200);
     #s.runTime(100);
-    """
     s.setServer(1,1);
     s.runTime(100);
-    #s.setClient(2,"hello devanshu 3\n");
+    s.setClient(2,"hello devanshu 3\n");
     #s.setClient(2,"msg helloWorld!\n");
     #s.setClient(2,"whisper devanshu hi!\n");
-    s.setClient(2,"listusr\n");
-    s.runTime(200);
+    #s.setClient(2,"listusr\n");
+    s.runTime(800);
     """
     s.testServer(8, 7);
     s.runTime(50);
@@ -58,6 +57,6 @@ def main():
     #s.runTime(60);
     #s.testClientClose(10, 6, 3, 5);
     #s.runTime(280);
-
+    """
 if __name__ == '__main__':
     main()

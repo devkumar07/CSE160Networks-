@@ -28,6 +28,7 @@ module Node{
    uses interface List<char> as NeighborList;
    uses interface CommandHandler;
    uses interface List<RouteNode> as RouteTable;
+   uses interface List<ConnectedClients> as ClientsDB;
 }
 
 implementation{
@@ -523,13 +524,21 @@ implementation{
 
       if((uint8_t) strcmp(res1,"hello") == 0){
          char *user;
-         char *clientport;
-          user = strtok(NULL, delimiter);
-          dbg(TRANSPORT_CHANNEL,"user %s\n", user);
+         uint8_t clientport;
+         user = strtok(NULL, delimiter);
+         dbg(TRANSPORT_CHANNEL,"user %s\n", user);
 
-          clientport = strtok(NULL, delimiter);
-          dbg(TRANSPORT_CHANNEL,"clientport %s\n", clientport);
-
+         clientport = (uint8_t) strtok(NULL, delimiter);
+         dbg(TRANSPORT_CHANNEL,"clientport %d\n", clientport);
+         
+         sockets[clientport].state = SYN_SENT;
+         sockets[clientport].flag = TOS_NODE_ID;
+         sockets[clientport].src = clientport;
+         sockets[clientport].dest.addr = 1;
+         sockets[clientport].dest.port = 1;
+         sockets[clientport].RTT = 8000;
+         dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[clientport].RTT);
+         call TCP_Timer.startOneShot(sockets[clientport].RTT * 2);
       }
       else if((uint8_t) strcmp(res1,"msg") == 0){
          char *message;

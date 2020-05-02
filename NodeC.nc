@@ -18,7 +18,7 @@ typedef nx_struct RouteNode{
 } RouteNode;
 
 typedef nx_struct ConnectedClients{
-   char* username;;
+   nx_uint16_t username;
    nx_uint16_t node;
    nx_uint16_t port;
 } ConnectedClients;
@@ -63,4 +63,7 @@ implementation {
 
     components new ListC(RouteNode, 255) as RouteTableC;
     Node.RouteTable -> RouteTableC;
+
+    components new ListC(ConnectedClients, 255) as ConnectedClientsC;
+    Node.ClientsDB -> ConnectedClientsC;
 }

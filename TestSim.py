@@ -16,6 +16,8 @@ class TestSim:
     CMD_TEST_SERVER=5
     CMD_TEST_CLIENT=4
     CMD_TEST_CLIENT_CLOSE=7
+    CMD_SET_APP_SERVER = 11
+    CMD_SET_APP_CLIENT = 10
 
     # CHANNELS - see includes/channels.h
     COMMAND_CHANNEL="command";
@@ -140,6 +142,13 @@ class TestSim:
 
     def testClientClose(self, src, dest, destPort, srcPort):
         self.sendCMD(self.CMD_TEST_CLIENT_CLOSE, src, "{0}{1}{2}{3}".format(chr(src), chr(dest),chr(destPort),chr(srcPort)));
+    
+    def setClient(self, client, msg):
+        self.sendCMD(self.CMD_SET_APP_CLIENT, client, "{0}{1}".format(chr(client),msg));
+    
+    def setServer(self, server, port):
+        self.sendCMD(self.CMD_SET_APP_SERVER, server, "{0}{1}".format(chr(server),chr(port)));
+
 def main():
     s = TestSim();
     s.runTime(10);

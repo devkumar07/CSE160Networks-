@@ -31,6 +31,11 @@ def main():
     #s.testServer(1, 2);
     #s.runTime(200);
     #s.runTime(100);
+    s.setServer(1,1);
+    s.runTime(100);
+    s.setClient(2,"hello dev\n");
+    s.runTime(200);
+    """
     s.testServer(8, 7);
     s.runTime(50);
     s.testServer(6, 3);
@@ -49,7 +54,7 @@ def main():
     #s.runTime(60);
     s.testClientClose(10, 6, 3, 5);
     s.runTime(280);
-
+    """
 
 if __name__ == '__main__':
     main()

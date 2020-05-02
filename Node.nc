@@ -86,7 +86,7 @@ implementation{
    event void TCP_Timer.fired(){
       uint8_t i = 0; 
       uint8_t j = 0;
-      //dbg(TRANSPORT_CHANNEL, "TCP_Timer fired function %d\n", TOS_NODE_ID);
+      dbg(TRANSPORT_CHANNEL, "TCP_Timer fired function %d\n", TOS_NODE_ID);
       for(i = 0; i < MAX_NUM_OF_SOCKETS; i++){
          if(sockets[i].state == SYN_SENT){
             dbg(TRANSPORT_CHANNEL, "In SYN_SYN\n");
@@ -524,21 +524,24 @@ implementation{
 
       if((uint8_t) strcmp(res1,"hello") == 0){
          char *user;
-         uint8_t clientport;
+         char *clientport;
+         uint8_t port;
          user = strtok(NULL, delimiter);
          dbg(TRANSPORT_CHANNEL,"user %s\n", user);
 
-         clientport = (uint8_t) strtok(NULL, delimiter);
+         clientport = strtok(NULL, delimiter);
          dbg(TRANSPORT_CHANNEL,"clientport %d\n", clientport);
-         
-         sockets[clientport].state = SYN_SENT;
-         sockets[clientport].flag = TOS_NODE_ID;
-         sockets[clientport].src = clientport;
-         sockets[clientport].dest.addr = 1;
-         sockets[clientport].dest.port = 1;
-         sockets[clientport].RTT = 8000;
-         dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[clientport].RTT);
-         call TCP_Timer.startOneShot(sockets[clientport].RTT * 2);
+         port = atoi(clientport);
+
+         signal CommandHandler.setTestClient(port, 1,1,payload);
+         // sockets[3].state = SYN_SENT;
+         // sockets[3].flag = TOS_NODE_ID;
+         // sockets[3].src = 3;
+         // sockets[3].dest.addr = 1;
+         // sockets[3].dest.port = 1;
+         // sockets[3].RTT = 8000;
+         // dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[clientport].RTT);
+         // call TCP_Timer.startOneShot(sockets[clientport].RTT * 2);
       }
       else if((uint8_t) strcmp(res1,"msg") == 0){
          char *message;

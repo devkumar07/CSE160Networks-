@@ -39,7 +39,7 @@ implementation{
    uint8_t delay =0;
    uint8_t socket;
    uint16_t nextPacket = 0;
-   uint8_t port_info [PACKET_MAX_PAYLOAD_SIZE];
+   void port_info [PACKET_MAX_PAYLOAD_SIZE];
    // Prototypes
    void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t Protocol, uint16_t seq, uint8_t *payload, uint8_t length);
    bool checkExistsPacket(pack *Package);
@@ -273,6 +273,7 @@ implementation{
                }
                else if (myMsg->protocol == PROTOCOL_TCP){
                   uint16_t next;
+                  char *username;
                   if(sockets[myMsg->payload[1]].state == SYN_RCVD){
                      dbg(TRANSPORT_CHANNEL, "Changing receiver state to established\n");
                      sockets[myMsg->payload[1]].state = ESTABLISHED;
@@ -280,6 +281,13 @@ implementation{
                   port_info[0] = myMsg->payload[1];
                   port_info[1] = myMsg->payload[0];
                   port_info[2] = myMsg->payload[2];
+                  port_info[4] = myMsg->payload[4];
+                  port_info[5] = myMsg->payload[5];
+                  port_info[6] = myMsg->payload[6];
+
+                  username = (char *)myMsg->payload[5];
+                  dbg(TRANSPORT_CHANNEL, "IN TCP, user: %s\n", username);
+                  //dbg(TRANSPORT_CHANNEL, "IN TCP, client: %d, user : %s, client port: %d\n", port_info[4], username, port_info[6]);
                   makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)port_info, PACKET_MAX_PAYLOAD_SIZE);
                   next = get_next_hop(myMsg->src);
                   dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, myMsg->payload[1], myMsg->src, myMsg->payload[0], myMsg->payload[2]);
@@ -530,9 +538,13 @@ implementation{
          dbg(TRANSPORT_CHANNEL,"user %s\n", user);
 
          clientport = strtok(NULL, delimiter);
-         dbg(TRANSPORT_CHANNEL,"clientport %d\n", clientport);
+         dbg(TRANSPORT_CHANNEL,"clientport %s\n", clientport);
          port = atoi(clientport);
+         port_info[4] = client;
+         port_info[5] = (uint8_t)user;
 
+         dbg(TRANSPORT_CHANNEL,"user in port 5: %d\n", port_info[5]);
+         port_info[6] = port;
          signal CommandHandler.setTestClient(port, 1,1,payload);
          // sockets[3].state = SYN_SENT;
          // sockets[3].flag = TOS_NODE_ID;

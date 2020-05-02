@@ -230,7 +230,7 @@ implementation{
                   uint16_t next;
                   uint8_t index;
                   index = myMsg->payload[1];
-                  if(sockets[index].state == LISTEN){
+                  if(sockets[index].state == LISTEN || sockets[index].state == ESTABLISHED){
                      dbg(TRANSPORT_CHANNEL, "Syn Packet Arrived from Node %d for Port %d\n", myMsg->src, index);
                      sockets[index].state = SYN_RCVD;
                      sockets[index].src = TOS_NODE_ID;

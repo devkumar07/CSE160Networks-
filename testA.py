@@ -31,6 +31,7 @@ def main():
     #s.testServer(1, 2);
     #s.runTime(200);
     #s.runTime(100);
+    """
     s.setServer(1,1);
     s.runTime(100);
     #s.setClient(2,"hello devanshu 3\n");
@@ -41,23 +42,22 @@ def main():
     """
     s.testServer(8, 7);
     s.runTime(50);
-    s.testServer(6, 3);
-    s.runTime(50);
+    #s.testServer(6, 3);
+    #s.runTime(50);
 
     #s.runTime(500);
     #source, dest, srcPort, destPort, data
-    #s.testClient(9, 8, 4, 7, 250); #char value limit of 255 on transfer...
-    #s.runTime(800);
+    s.testClient(9, 8, 4, 7, 250); #char value limit of 255 on transfer...
+    s.runTime(800);
 
-    s.testClient(10, 6, 5, 3, 250);
+    s.testClient(10, 8, 5, 7, 250);
     s.runTime(800);
     #src, dest, destPort, srcPort
     #s.testClientClose(9, 8, 7, 4);
     #s.runTime(200);
     #s.runTime(60);
-    s.testClientClose(10, 6, 3, 5);
-    s.runTime(280);
-    """
+    #s.testClientClose(10, 6, 3, 5);
+    #s.runTime(280);
 
 if __name__ == '__main__':
     main()

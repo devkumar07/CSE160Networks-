@@ -39,7 +39,7 @@ implementation{
    uint8_t delay =0;
    uint8_t socket;
    uint16_t nextPacket = 0;
-   void port_info [PACKET_MAX_PAYLOAD_SIZE];
+   uint8_t port_info [PACKET_MAX_PAYLOAD_SIZE];
    // Prototypes
    void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t Protocol, uint16_t seq, uint8_t *payload, uint8_t length);
    bool checkExistsPacket(pack *Package);
@@ -541,9 +541,9 @@ implementation{
          dbg(TRANSPORT_CHANNEL,"clientport %s\n", clientport);
          port = atoi(clientport);
          port_info[4] = client;
-         port_info[5] = (uint8_t)user;
+         port_info[5] = (char *)user;
 
-         dbg(TRANSPORT_CHANNEL,"user in port 5: %d\n", port_info[5]);
+         dbg(TRANSPORT_CHANNEL,"user in port 5: %s\n", (void *)port_info[5]);
          port_info[6] = port;
          signal CommandHandler.setTestClient(port, 1,1,payload);
          // sockets[3].state = SYN_SENT;

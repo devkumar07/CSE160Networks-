@@ -13,7 +13,7 @@
 #include "includes/sendInfo.h"
 #include "includes/channels.h"
 #include "includes/socket.h"
-#include <strings.h>
+#include <string.h>
 
 module Node{
    uses interface Boot;
@@ -516,11 +516,19 @@ implementation{
    }
 
    event void CommandHandler.setAppClient(uint8_t client, uint8_t *payload){
-      char *res =payload;
+      char *res = payload;
       char *res1;
-      uint8_t i = res.find('\0');
-
-      dbg(TRANSPORT_CHANNEL,"payload: %d",i);
+      uint8_t i = 0;
+      while(res[i] != ' '){
+          //dbg(TRANSPORT_CHANNEL,"res[i]: %c\n", res[i]);
+          i++;
+      }
+      strncpy(res1,res,i);
+      res1[i] = '\0';
+      dbg(TRANSPORT_CHANNEL,"result: %s\n", res1);
+      if((uint8_t) strcmp(res1,"hello") == 0){
+         
+      }
    }
 
    void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t protocol, uint16_t seq, uint8_t* payload, uint8_t length){

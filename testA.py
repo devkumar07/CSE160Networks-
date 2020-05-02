@@ -33,7 +33,7 @@ def main():
     #s.runTime(100);
     s.setServer(1,1);
     s.runTime(100);
-    s.setClient(2,"hello dev\n");
+    s.setClient(2,"message devanshu\n");
     s.runTime(200);
     """
     s.testServer(8, 7);

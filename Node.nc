@@ -60,14 +60,6 @@ implementation{
    event void AMControl.startDone(error_t err){
       if(err == SUCCESS){
          call periodicTimer.startPeriodic(5000);
-         //call periodicTimer1.startPeriodic(6000);
-         /*dbg(GENERAL_CHANNEL, "Time %d\n",call periodicTimer.getNow());
-         if(call periodicTimer.getNow() > 2000){
-            dbg(GENERAL_CHANNEL, "in here\n",call periodicTimer.getNow());
-            call periodicTimer1.startPeriodic(10000);
-         }*/
-         //call TCP_Timer.startPeriodic(100000);
-         //initialize_tcp_list();
          dbg(GENERAL_CHANNEL, "Radio On\n");
       }else{
          //Retry until successful
@@ -83,11 +75,6 @@ implementation{
          createRoutingTable();
       }
       delay++;
-      //dbg(GENERAL_CHANNEL, "Time %d\n",call periodicTimer.getNow());
-      /*if(call periodicTimer.getNow() > 10000){
-         //dbg(GENERAL_CHANNEL, "in here\n",call periodicTimer.getNow());
-         call periodicTimer1.startPeriodic(10000);
-      }*/
    }
    //Random firing for RoutingTable
    event void periodicTimer1.fired(){
@@ -174,8 +161,7 @@ implementation{
                   uint16_t i = 0;
                   bool found;
                   found = FALSE;
-                  //dbg(NEIGHBOR_CHANNEL, "NEIGHBOR: Recieved ping reply: \n");
-                  //printNeighbors();
+
                   for(i=0; i < call NeighborList.size(); i++){
                      if(myMsg->src == call NeighborList.get(i)){
                         found = TRUE;
@@ -185,10 +171,6 @@ implementation{
                      //dbg(NEIGHBOR_CHANNEL, "NEIGHBOR: Found a new neighbor: %d\n",myMsg->src);
                      call NeighborList.pushback(myMsg->src);
                   }
-                  /*if(call periodicTimer.getNow() > 2000 && call periodicTimer.isRunning() == FALSE){
-                     //dbg(GENERAL_CHANNEL, "in here\n",call periodicTimer.getNow());
-                     call periodicTimer1.startPeriodic(10000);
-                  }*/
                }
                //This block deals with the link layer for routing 
                else if(myMsg->protocol == PROTOCOL_LINKEDLIST){
@@ -257,16 +239,7 @@ implementation{
                      call TCP_Timer.stop();
                      //dbg(TRANSPORT_CHANNEL, "Values assigned succesfully\n");
                      call TCP_Timer.startOneShot(sockets[i].RTT * 2);
-                     //call TCP_Timer.startPeriodic(100000);
                      send_rcvd(sockets[index].src, sockets[index].dest.addr, sockets[index].dest.port);
-                     /*port_info[0] = myMsg->payload[1];
-                     port_info[1] = myMsg->payload[0];
-                     port_info[3] = 3;
-                     makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_SYN_ACK, seqNum, (uint8_t *)port_info, PACKET_MAX_PAYLOAD_SIZE);
-                     next = get_next_hop(myMsg->src);
-                     seqNum++;
-                     dbg(TRANSPORT_CHANNEL, "Syn Ack Packet sent to Node %d for Port %d\n", myMsg->src, index);
-                     call Sender.send(sendPackage, next);*/
                   }
                   else{
                      dbg(TRANSPORT_CHANNEL, "state: %s\n", sockets[index].state);
@@ -515,7 +488,6 @@ implementation{
 
    event void CommandHandler.setTestServer(uint8_t socket_in){
       sockets[socket_in].state = LISTEN;
-      //call TCP_Timer.startPeriodic(10000);
    }
 
    event void CommandHandler.setTestClient(uint16_t source_socket, uint16_t target_addr, uint16_t target_socket, uint16_t data){
@@ -527,8 +499,6 @@ implementation{
       sockets[source_socket].RTT = 8000;
       dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[source_socket].RTT);
       call TCP_Timer.startOneShot(sockets[source_socket].RTT * 2);
-      //send_syn(source_socket,sockets[source_socket].dest.addr,sockets[source_socket].dest.port);
-      //call TCP_Timer.startPeriodic(100000);
    }
 
    event void CommandHandler.setClientClose(uint8_t client_addr, uint8_t dest_addr, uint8_t destPort, uint8_t srcPort){
@@ -537,7 +507,6 @@ implementation{
       port_info[0] = destPort;
       //dbg(GENERAL_CHANNEL, "want to open port: %d\n", port_info[1]);
       makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_FIN, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
-      ////printRoute();
       call Sender.send(sendPackage, nexHop);
    }
 
@@ -695,9 +664,6 @@ implementation{
          //dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
          makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
          dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, port_info[0], dest_addr, port_info[1], nextPacket);
-         //nextPacket++;
-         //call TCP_Timeout.startOneShot(6000);
-         //call TCP_Timeout.startOneShot(4 * sockets[srcPort].RTT);
          sockets[srcPort].effectiveWindow--;
          dbg(TRANSPORT_CHANNEL, "Updated Effective Window after sending packet to receiver: %d\n", sockets[srcPort].effectiveWindow);
          call Sender.send(sendPackage, nexHop);

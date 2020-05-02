@@ -517,18 +517,41 @@ implementation{
 
    event void CommandHandler.setAppClient(uint8_t client, uint8_t *payload){
       char *res = payload;
-      char *res1;
-      uint8_t i = 0;
-      while(res[i] != ' '){
-          //dbg(TRANSPORT_CHANNEL,"res[i]: %c\n", res[i]);
-          i++;
-      }
-      strncpy(res1,res,i);
-      res1[i] = '\0';
+      char *delimiter = " ";
+      char *res1 = strtok(res, delimiter);
       dbg(TRANSPORT_CHANNEL,"result: %s\n", res1);
+
       if((uint8_t) strcmp(res1,"hello") == 0){
+         char *user;
+         char *clientport;
+          user = strtok(NULL, delimiter);
+          dbg(TRANSPORT_CHANNEL,"user %s\n", user);
+
+          clientport = strtok(NULL, delimiter);
+          dbg(TRANSPORT_CHANNEL,"clientport %s\n", clientport);
+
+      }
+      else if((uint8_t) strcmp(res1,"msg") == 0){
+         char *message;
+         message = strtok(NULL, delimiter);
+          dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
+      }
+      else if((uint8_t) strcmp(res1,"whisper") == 0){
+         char *user;
+         char *message;
+          user = strtok(NULL, delimiter);
+          dbg(TRANSPORT_CHANNEL,"user %s\n", user);
+
+          message = strtok(NULL, delimiter);
+          dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
+      }
+      else if((uint8_t) strcmp(res1,"listusr") == 0){
          
       }
+      else{
+         dbg(TRANSPORT_CHANNEL,"%s is not an option\n", res1);
+      }
+      
    }
 
    void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t protocol, uint16_t seq, uint8_t* payload, uint8_t length){

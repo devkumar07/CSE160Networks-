@@ -40,7 +40,10 @@ implementation{
    uint8_t socket;
    uint16_t nextPacket = 0;
    uint8_t port_info [PACKET_MAX_PAYLOAD_SIZE];
+   uint8_t clientPort;
    char * user;
+   char *message;
+   char * cmd;
    // Prototypes
    void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t Protocol, uint16_t seq, uint8_t *payload, uint8_t length);
    bool checkExistsPacket(pack *Package);
@@ -107,7 +110,7 @@ implementation{
                //dbg(TRANSPORT_CHANNEL, "size: %d\n",sockets[i].effectiveWindow);
                sockets[i].nextExpected = nextPacket + sockets[i].effectiveWindow+1;
                //call TCP_Timeout.startOneShot(call TCP_Timer.getNow() + sockets[i].RTT * 2);
-               call TCP_Timeout.startOneShot(sockets[i].RTT * 2);
+               //call TCP_Timeout.startOneShot(sockets[i].RTT * 2);
                send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
                /*for(j = 0; j < sockets[i].effectiveWindow; j++){
                   if(sockets[i].effectiveWindow > 0){
@@ -548,7 +551,6 @@ implementation{
       dbg(TRANSPORT_CHANNEL,"result: %s\n", res1);
 
       if((uint8_t) strcmp(res1,"hello") == 0){
-         char *user;
          char *clientport;
          uint8_t port;
          user = strtok(NULL, delimiter);
@@ -557,29 +559,16 @@ implementation{
          clientport = strtok(NULL, delimiter);
          dbg(TRANSPORT_CHANNEL,"clientport %s\n", clientport);
          port = atoi(clientport);
-         // port_info[4] = client;
-         // port_info[5] = (char *)user;
-
-         //dbg(TRANSPORT_CHANNEL,"user in port 5: %s\n", (void *)port_info[5]);
-         // port_info[6] = port;
+         clientPort = port;
          signal CommandHandler.setTestClient(port, 1, 1, user);
-         // sockets[3].state = SYN_SENT;
-         // sockets[3].flag = TOS_NODE_ID;
-         // sockets[3].src = 3;
-         // sockets[3].dest.addr = 1;
-         // sockets[3].dest.port = 1;
-         // sockets[3].RTT = 8000;
-         // dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[clientport].RTT);
-         // call TCP_Timer.startOneShot(sockets[clientport].RTT * 2);
       }
       else if((uint8_t) strcmp(res1,"msg") == 0){
-         char *message;
          message = strtok(NULL, "\n");
          dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
+         cmd = "msg";
+         call TCP_Timer.startOneShot(sockets[source_socket].RTT * 2);
       }
       else if((uint8_t) strcmp(res1,"whisper") == 0){
-         char *user;
-         char *message;
           user = strtok(NULL, delimiter);
           dbg(TRANSPORT_CHANNEL,"user %s\n", user);
 
@@ -747,10 +736,16 @@ implementation{
       0: src_port; 1: dest_port; 2: seq#;
    */
    void send_TCP(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort){
-
+         ConnectedClients data;
+         ConnectedClients data_address;
          uint16_t nexHop = get_next_hop(dest_addr);
          //dbg(TRANSPORT_CHANNEL, "TCP Target Node: %d\n", dest_addr);
          //dbg(TRANSPORT_CHANNEL, "Sending seqNum: %d\n", nextPacket);
+         if((uint8_t) strcmp(cmd,"msg") == 0){
+            nextPacket++;
+            data.cmd = "msg";
+
+         }
          nextPacket++;
          port_info[0] = srcPort;
          port_info[1] = destPort;

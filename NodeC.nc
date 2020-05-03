@@ -25,6 +25,7 @@ typedef struct ConnectedClients{
    nx_uint16_t destNode;
    nx_uint16_t effectiveWindow;
    nx_uint16_t seqNum;
+   char* cmd;
 } ConnectedClients;
 
 configuration NodeC{

@@ -34,10 +34,13 @@ def main():
     s.setServer(1,1);
     s.runTime(100);
     s.setClient(2,"hello devanshu 3\n");
-    #s.setClient(2,"msg helloWorld!\n");
+    s.runTime(300);
+    s.setClient(2,"msg hello World!\n");
     #s.setClient(2,"whisper devanshu hi!\n");
     #s.setClient(2,"listusr\n");
-    s.runTime(800);
+    s.runTime(100);
+    #s.setClient(3,"hello keerthana 3\n");
+    #s.runTime(50);
     """
     s.testServer(8, 7);
     s.runTime(50);

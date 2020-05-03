@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.nc": "c",
-        "commandmsg.h": "c"
+        "commandmsg.h": "c",
+        "system_error": "c"
     }
 }

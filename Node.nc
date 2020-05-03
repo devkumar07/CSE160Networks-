@@ -103,16 +103,18 @@ implementation{
          }
          else if(sockets[i].state == ESTABLISHED){
             //client
-            if (sockets[i].flag == TOS_NODE_ID && nextPacket <=250){
+            if (sockets[i].flag == TOS_NODE_ID && nextPacket < 1){
                //dbg(TRANSPORT_CHANNEL, "size: %d\n",sockets[i].effectiveWindow);
                sockets[i].nextExpected = nextPacket + sockets[i].effectiveWindow+1;
                //call TCP_Timeout.startOneShot(call TCP_Timer.getNow() + sockets[i].RTT * 2);
-               for(j = 0; j <= sockets[i].effectiveWindow+1; j++){
+               call TCP_Timeout.startOneShot(sockets[i].RTT * 2);
+               send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
+               /*for(j = 0; j < sockets[i].effectiveWindow; j++){
                   if(sockets[i].effectiveWindow > 0){
-                     call TCP_Timeout.startOneShot( sockets[i].RTT * 2);
+                     call TCP_Timeout.startOneShot( 2000);
                      send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
                   }
-               }
+               }*/
             }
          }
       }
@@ -123,21 +125,23 @@ implementation{
       uint8_t j = 0;
       for(i = 0; i < MAX_NUM_OF_SOCKETS; i++){
          if(sockets[i].state == ESTABLISHED){
-            if (sockets[i].flag == TOS_NODE_ID && nextPacket <=250){
+            if (sockets[i].flag == TOS_NODE_ID && nextPacket <= 1){
                dbg(TRANSPORT_CHANNEL, "Timeout called. Received up to %d packets for going from %d in port %d\n", sockets[i].lastAck, TOS_NODE_ID, sockets[i].src);
                   nextPacket = sockets[i].lastAck;
                   //if(sockets[i].effectiveWindow == 0){
-                     sockets[i].effectiveWindow = 3;
+                     sockets[i].effectiveWindow = 1;
                   //}
                   //call TCP_Timer.startPeriodic(10000);
-                  sockets[i].nextExpected = nextPacket + sockets[i].effectiveWindow+1;
+                  sockets[i].nextExpected = nextPacket + sockets[i].effectiveWindow;
                //call TCP_Timeout.startOneShot(call TCP_Timer.getNow() + sockets[i].RTT * 2);
-               for(j = 0; j <= sockets[i].effectiveWindow+1; j++){
+               call TCP_Timeout.startOneShot( sockets[i].RTT * 2);
+               send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
+               /*for(j = 0; j <= sockets[i].effectiveWindow; j++){
                   if(sockets[i].effectiveWindow > 0){
                      call TCP_Timeout.startOneShot( sockets[i].RTT * 2);
                      send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
                   }
-               }
+               }*/
             }
          }
       }
@@ -250,7 +254,7 @@ implementation{
                      call TCP_Timer.stop();
                      //dbg(TRANSPORT_CHANNEL, "Values assigned succesfully\n");
                      call TCP_Timer.startOneShot(sockets[i].RTT * 2);
-                     send_rcvd(sockets[index].src, sockets[index].dest.addr, sockets[index].dest.port);
+                     //send_rcvd(sockets[index].src, sockets[index].dest.addr, sockets[index].dest.port);
                   }
                   else{
                      dbg(TRANSPORT_CHANNEL, "state: %s\n", sockets[index].state);
@@ -309,18 +313,18 @@ implementation{
                    call TCP_Timeout.stop();
                   dbg(TRANSPORT_CHANNEL, "ACK received from node %d port %d to node %d port %d for seqNum %d \n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1],myMsg->payload[2]);
                   //sockets[myMsg->payload[1]].effectiveWindow = myMsg->payload[3];
-                  if(sockets[myMsg->payload[1]].effectiveWindow < 3){
+                  if(sockets[myMsg->payload[1]].effectiveWindow < 1){
                      sockets[myMsg->payload[1]].effectiveWindow++;
                      dbg(TRANSPORT_CHANNEL, "Able to send another %d packet(s) from the effective window\n", sockets[myMsg->payload[1]].effectiveWindow);
                   }
                   if(myMsg->payload[2] - sockets[myMsg->payload[1]].lastAck == 1){
                      sockets[myMsg->payload[1]].lastAck = myMsg->payload[2];
                      dbg(TRANSPORT_CHANNEL, "Received upto %d packet(s) \n", sockets[myMsg->payload[1]].lastAck);
-                     sockets[myMsg->payload[1]].nextExpected++;
-                     if(sockets[myMsg->payload[1]].effectiveWindow > 0 && nextPacket <=250){
+                     /*sockets[myMsg->payload[1]].nextExpected++;
+                     if(sockets[myMsg->payload[1]].effectiveWindow > 0 && nextPacket <=1){
                         call TCP_Timeout.startOneShot( sockets[i].RTT * 2);
-                        send_TCP(myMsg->payload[1], myMsg->src, myMsg->payload[0]); 
-                     }
+                        //send_TCP(myMsg->payload[1], myMsg->src, myMsg->payload[0]); 
+                     }*/
                   }
                }
 
@@ -570,8 +574,8 @@ implementation{
       }
       else if((uint8_t) strcmp(res1,"msg") == 0){
          char *message;
-         message = strtok(NULL, delimiter);
-          dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
+         message = strtok(NULL, "\n");
+         dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
       }
       else if((uint8_t) strcmp(res1,"whisper") == 0){
          char *user;
@@ -579,7 +583,7 @@ implementation{
           user = strtok(NULL, delimiter);
           dbg(TRANSPORT_CHANNEL,"user %s\n", user);
 
-          message = strtok(NULL, delimiter);
+          message = strtok(NULL, "\n");
           dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
       }
       else if((uint8_t) strcmp(res1,"listusr") == 0){
@@ -729,7 +733,7 @@ implementation{
       data.srcPort = srcPort;
       data.destPort = destPort;
       data.username = user;
-      data.effectiveWindow = 3;
+      data.effectiveWindow = 1;
       data_address = &data;
       makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_SYN_ACK, seqNum, (uint8_t *) data_address, PACKET_MAX_PAYLOAD_SIZE);
       addPacketList(sendPackage);

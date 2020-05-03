@@ -17,10 +17,14 @@ typedef nx_struct RouteNode{
    nx_uint16_t cost;
 } RouteNode;
 
-typedef nx_struct ConnectedClients{
-   nx_uint16_t username;
-   nx_uint16_t node;
-   nx_uint16_t port;
+typedef struct ConnectedClients{
+   char* username;
+   nx_uint16_t srcNode;
+   nx_uint16_t srcPort;
+   nx_uint16_t destPort;
+   nx_uint16_t destNode;
+   nx_uint16_t effectiveWindow;
+   nx_uint16_t seqNum;
 } ConnectedClients;
 
 configuration NodeC{

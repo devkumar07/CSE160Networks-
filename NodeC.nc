@@ -19,12 +19,10 @@ typedef nx_struct RouteNode{
 
 typedef struct ConnectedClients{
    char *username;
-   uint8_t srcNode;
-   uint8_t srcPort;
-   uint8_t destPort;
-   uint8_t destNode;
-   uint8_t effectiveWindow;
-   uint8_t seqNum;
+   nx_uint16_t srcNode;
+   nx_uint16_t srcPort;
+   nx_uint16_t destPort;
+   nx_uint16_t seqNum;
 } ConnectedClients;
 
 typedef struct ChatPackets{

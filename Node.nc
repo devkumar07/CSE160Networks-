@@ -95,13 +95,13 @@ implementation{
          if(sockets[i].state == SYN_SENT){
             dbg(TRANSPORT_CHANNEL, "In SYN_SYN\n");
             ////printRoute();
-            call TCP_Timer.startOneShot(sockets[i].RTT * 2);
+            //call TCP_Timer.startOneShot(sockets[i].RTT * 2);
             send_syn(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
          }
          else if(sockets[i].state == SYN_RCVD){
             //sockets[i].state = ESTABLISHED;
             dbg(TRANSPORT_CHANNEL, "In SYN_RCVD\n");
-            call TCP_Timer.startOneShot(sockets[i].RTT * 2);
+            //call TCP_Timer.startOneShot(sockets[i].RTT * 2);
             send_rcvd(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
          }
          else if(sockets[i].state == ESTABLISHED){
@@ -242,7 +242,9 @@ implementation{
                   dbg(TRANSPORT_CHANNEL, "clear\n");
                   if(sockets[index].state == LISTEN || sockets[index].state == ESTABLISHED){
                      dbg(TRANSPORT_CHANNEL, "Syn Packet Arrived from Node %d for Port %d\n", myMsg->src, index);
-                     sockets[index].state = SYN_RCVD;
+                     if(sockets[index].state != ESTABLISHED){
+                        sockets[index].state = SYN_RCVD;
+                     }
                      sockets[index].src = TOS_NODE_ID;
                      sockets[index].dest.addr = temp->srcNode;
                      sockets[index].dest.port = temp->srcPort;

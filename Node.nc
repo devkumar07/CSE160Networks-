@@ -566,7 +566,7 @@ implementation{
          message = strtok(NULL, "\n");
          dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
          cmd = "msg";
-         call TCP_Timer.startOneShot(sockets[source_socket].RTT * 2);
+         call TCP_Timer.startOneShot(sockets[clientPort].RTT * 2);
       }
       else if((uint8_t) strcmp(res1,"whisper") == 0){
           user = strtok(NULL, delimiter);
@@ -741,11 +741,6 @@ implementation{
          uint16_t nexHop = get_next_hop(dest_addr);
          //dbg(TRANSPORT_CHANNEL, "TCP Target Node: %d\n", dest_addr);
          //dbg(TRANSPORT_CHANNEL, "Sending seqNum: %d\n", nextPacket);
-         if((uint8_t) strcmp(cmd,"msg") == 0){
-            nextPacket++;
-            data.cmd = "msg";
-
-         }
          nextPacket++;
          port_info[0] = srcPort;
          port_info[1] = destPort;

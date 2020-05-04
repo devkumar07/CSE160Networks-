@@ -324,8 +324,21 @@ implementation{
                      call Sender.send(sendPackage, next);
                   }
                   else if(temp->info == 1){
+                     uint8_t i =0;
                      dbg(TRANSPORT_CHANNEL, "in here tcp received\n");
                      dbg(TRANSPORT_CHANNEL, "message in tcp received: %s\n",temp->message);
+                     for(i = 0; i < call ClientsDB.size(); i++){
+                        ConnectedClients t = call ClientsDB.get(i);
+                        data.destPort = t.destPort;
+                        data.seqNum = temp->seqNum;
+                        data.message = temp->message;
+                        data.info = temp->info;
+                        data_address = &data;
+                        makePack(&sendPackage, TOS_NODE_ID, t.destNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
+                        next = get_next_hop(t.destNode);
+                        dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.destNode, data.destPort, temp->seqNum);
+                        call Sender.send(sendPackage, next);
+                     }
                   }
                   else{
                      data.srcPort = temp->destPort;
@@ -350,10 +363,13 @@ implementation{
                }
                else if (myMsg->protocol == PROTOCOL_ACK){
                    uint8_t k = 0;
-                   ConnectedClients *temp = (ConnectedClients*) myMsg->payload;
+                   ChatPackets *temp = (ChatPackets*) myMsg->payload;
                    call TCP_Timeout.stop();
                   dbg(TRANSPORT_CHANNEL, "ACK received from node %d port %d to node %d port %d for seqNum %d \n", myMsg->src, temp->srcPort, TOS_NODE_ID, temp->destPort, temp->seqNum);
                   //sockets[myMsg->payload[1]].effectiveWindow = myMsg->payload[3];
+                  if(temp->info == 1){
+                     dbg(TRANSPORT_CHANNEL, "TCP Message was sent by a user containing message: %s\n", temp->message);
+                  }
                   if(sockets[temp->destPort].effectiveWindow < 1){
                      sockets[temp->destPort].effectiveWindow++;
                      //dbg(TRANSPORT_CHANNEL, "Able to send another %d packet(s) from the effective window\n", sockets[myMsg->payload[1]].effectiveWindow);

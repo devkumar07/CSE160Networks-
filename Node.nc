@@ -301,6 +301,24 @@ implementation{
                   if(sockets[temp->destPort].state == SYN_RCVD){
                      dbg(TRANSPORT_CHANNEL, "Changing receiver state to established\n");
                      sockets[temp->destPort].state = ESTABLISHED;
+                     data.srcPort = temp->destPort;
+                     data.destPort = temp->srcPort;
+                     data.seqNum = temp->seqNum;
+                     data_address = &data;
+                     // port_info[0] = myMsg->payload[1];
+                     // port_info[1] = myMsg->payload[0];
+                     // port_info[2] = myMsg->payload[2];
+                     // port_info[4] = myMsg->payload[4];
+                     // port_info[5] = myMsg->payload[5];
+                     // port_info[6] = myMsg->payload[6];
+
+                     //username = (char *)myMsg->payload[5];
+                     //dbg(TRANSPORT_CHANNEL, "IN TCP, user: %s\n", username);
+                     //dbg(TRANSPORT_CHANNEL, "IN TCP, client: %d, user : %s, client port: %d\n", port_info[4], username, port_info[6]);
+                     makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
+                     next = get_next_hop(myMsg->src);
+                     dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, myMsg->src, temp->srcPort, temp->seqNum);
+                     call Sender.send(sendPackage, next);
                   }
                   data.srcPort = temp->destPort;
                   data.destPort = temp->srcPort;
@@ -578,7 +596,7 @@ implementation{
          message = strtok(NULL, "\n");
          dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
          cmd = res1;
-         dbg(TRANSPORT_CHANNEL,"clientPort: %s\n", clientPort);
+         dbg(TRANSPORT_CHANNEL,"clientPort: %d\n", clientPort);
          //call TCP_Timer.startOneShot(sockets[clientPort].RTT * 2);
          send_TCP(clientPort,1,1);
       }

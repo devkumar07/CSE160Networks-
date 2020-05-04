@@ -293,11 +293,17 @@ implementation{
                   uint16_t next;
                   char *username;
                   uint8_t index;
-                  ConnectedClients *temp = (ConnectedClients *) myMsg->payload;
-                  ConnectedClients data;
-                  ConnectedClients *data_address;
+                  char *res;
+                  char *delimiter = " ";
+                  char *res1;
+                  ChatPackets *temp = (ChatPackets*) myMsg->payload;
+                  ChatPackets data;
+                  ChatPackets *data_address;
+                  res = temp->info;
                   index = temp->destPort;
+                  res1 = strtok(res, delimiter);
                   dbg(TRANSPORT_CHANNEL, "destPort: %d\n",index);
+                  dbg(TRANSPORT_CHANNEL, "info: %s\n",res1);
                   if(sockets[temp->destPort].state == SYN_RCVD){
                      dbg(TRANSPORT_CHANNEL, "Changing receiver state to established\n");
                      sockets[temp->destPort].state = ESTABLISHED;
@@ -319,6 +325,9 @@ implementation{
                      next = get_next_hop(myMsg->src);
                      dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, myMsg->src, temp->srcPort, temp->seqNum);
                      call Sender.send(sendPackage, next);
+                  }
+                  if((uint8_t) strcmp(res1,"msg") == 0){
+                     dbg(TRANSPORT_CHANNEL, "in here\n");
                   }
                   data.srcPort = temp->destPort;
                   data.destPort = temp->srcPort;
@@ -589,7 +598,9 @@ implementation{
          dbg(TRANSPORT_CHANNEL,"clientport %d\n", clientPort);
          port = atoi(clientport);
          clientPort = port;
-         cmd = res1;;
+         cmd = res1;
+         message = res;
+         dbg(TRANSPORT_CHANNEL,"res: %s\n", res);
          signal CommandHandler.setTestClient(port, 1, 1, user);
       }
       else if((uint8_t) strcmp(res1,"msg") == 0){
@@ -598,6 +609,7 @@ implementation{
          cmd = res1;
          dbg(TRANSPORT_CHANNEL,"clientPort: %d\n", clientPort);
          //call TCP_Timer.startOneShot(sockets[clientPort].RTT * 2);
+         message = res;
          send_TCP(clientPort,1,1);
       }
       else if((uint8_t) strcmp(res1,"whisper") == 0){
@@ -768,23 +780,22 @@ implementation{
       0: src_port; 1: dest_port; 2: seq#;
    */
    void send_TCP(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort){
-         ConnectedClients data;
-         ConnectedClients *data_address;
+         ChatPackets data;
+         ChatPackets *data_address;
          uint16_t nexHop = get_next_hop(dest_addr);
          dbg(TRANSPORT_CHANNEL, "in here tcp send\n");
          dbg(TRANSPORT_CHANNEL, "in here tcp send %s\n", cmd);
          //dbg(TRANSPORT_CHANNEL, "TCP Target Node: %d\n", dest_addr);
          //dbg(TRANSPORT_CHANNEL, "Sending seqNum: %d\n", nextPacket);
-         if((uint8_t) strcmp(cmd,"msg") == 0){
+         /*if((uint8_t) strcmp(cmd,"msg") == 0){
              dbg(TRANSPORT_CHANNEL, "in here\n");
-         }
-         else{
+         }*/
+         //else{
             nextPacket++;
-            data.cmd = cmd;
             data.srcPort = srcPort;
             data.destPort = destPort;
             data.seqNum = nextPacket;
-            data.effectiveWindow = sockets[srcPort].effectiveWindow;
+            data.info = message;
             data_address = &data;
             // port_info[0] = srcPort;
             // port_info[1] = destPort;
@@ -797,7 +808,7 @@ implementation{
             sockets[srcPort].effectiveWindow--;
             dbg(TRANSPORT_CHANNEL, "Updated Effective Window after sending packet to receiver: %d\n", sockets[srcPort].effectiveWindow);
             call Sender.send(sendPackage, nexHop);
-         }
+         //}
    }
 
    uint16_t get_next_hop(uint16_t dest_addr){

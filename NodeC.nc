@@ -18,14 +18,15 @@ typedef nx_struct RouteNode{
 } RouteNode;
 
 typedef struct ConnectedClients{
-   char* username;
+   char *username;
    nx_uint16_t srcNode;
    nx_uint16_t srcPort;
    nx_uint16_t destPort;
    nx_uint16_t destNode;
    nx_uint16_t effectiveWindow;
    nx_uint16_t seqNum;
-   char* cmd;
+   char *cmd;
+   char *message;
 } ConnectedClients;
 
 configuration NodeC{

@@ -41,9 +41,9 @@ implementation{
    uint16_t nextPacket = 0;
    uint8_t port_info [PACKET_MAX_PAYLOAD_SIZE];
    uint8_t clientPort;
-   char * user;
+   char *user;
    char *message;
-   char * cmd;
+   char *cmd = 'hello';
    // Prototypes
    void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t Protocol, uint16_t seq, uint8_t *payload, uint8_t length);
    bool checkExistsPacket(pack *Package);
@@ -238,7 +238,7 @@ implementation{
                if (myMsg->protocol == PROTOCOL_SYN){
                   uint16_t next;
                   uint8_t index;
-                  ConnectedClients * temp = myMsg->payload;
+                  ConnectedClients * temp = (ConnectedClients *)myMsg->payload;
                   ConnectedClients data;
                   index = temp->destPort;
                   user = temp->username;
@@ -267,7 +267,7 @@ implementation{
                }
                else if (myMsg->protocol == PROTOCOL_SYN_ACK){
                   uint8_t index;
-                  ConnectedClients * temp = myMsg->payload;
+                  ConnectedClients * temp = (ConnectedClients *)myMsg->payload;
                   index = temp->destPort;
                   call TCP_Timer.stop();
                   sockets[index].state = ESTABLISHED;
@@ -292,13 +292,22 @@ implementation{
                else if (myMsg->protocol == PROTOCOL_TCP){
                   uint16_t next;
                   char *username;
-                  if(sockets[myMsg->payload[1]].state == SYN_RCVD){
+                  uint8_t index;
+                  ConnectedClients *temp = (ConnectedClients *) myMsg->payload;
+                  ConnectedClients data;
+                  ConnectedClients *data_address;
+                  index = temp->destPort;
+                  dbg(TRANSPORT_CHANNEL, "destPort: %d\n",index);
+                  if(sockets[temp->destPort].state == SYN_RCVD){
                      dbg(TRANSPORT_CHANNEL, "Changing receiver state to established\n");
-                     sockets[myMsg->payload[1]].state = ESTABLISHED;
+                     sockets[temp->destPort].state = ESTABLISHED;
                   }
-                  port_info[0] = myMsg->payload[1];
-                  port_info[1] = myMsg->payload[0];
-                  port_info[2] = myMsg->payload[2];
+                  data.srcPort = temp->destPort;
+                  data.destPort = temp->srcPort;
+                  data.seqNum = temp->seqNum;
+                  // port_info[0] = myMsg->payload[1];
+                  // port_info[1] = myMsg->payload[0];
+                  // port_info[2] = myMsg->payload[2];
                   // port_info[4] = myMsg->payload[4];
                   // port_info[5] = myMsg->payload[5];
                   // port_info[6] = myMsg->payload[6];
@@ -306,23 +315,24 @@ implementation{
                   //username = (char *)myMsg->payload[5];
                   //dbg(TRANSPORT_CHANNEL, "IN TCP, user: %s\n", username);
                   //dbg(TRANSPORT_CHANNEL, "IN TCP, client: %d, user : %s, client port: %d\n", port_info[4], username, port_info[6]);
-                  makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)port_info, PACKET_MAX_PAYLOAD_SIZE);
+                  makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
                   next = get_next_hop(myMsg->src);
-                  dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, myMsg->payload[1], myMsg->src, myMsg->payload[0], myMsg->payload[2]);
+                  dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, myMsg->src, temp->srcPort, temp->seqNum);
                   call Sender.send(sendPackage, next);
                }
                else if (myMsg->protocol == PROTOCOL_ACK){
                    uint8_t k = 0;
+                   ConnectedClients *temp = (ConnectedClients*) myMsg->payload;
                    call TCP_Timeout.stop();
-                  dbg(TRANSPORT_CHANNEL, "ACK received from node %d port %d to node %d port %d for seqNum %d \n", myMsg->src, myMsg->payload[0], TOS_NODE_ID, myMsg->payload[1],myMsg->payload[2]);
+                  dbg(TRANSPORT_CHANNEL, "ACK received from node %d port %d to node %d port %d for seqNum %d \n", myMsg->src, temp->srcPort, TOS_NODE_ID, temp->destPort, temp->seqNum);
                   //sockets[myMsg->payload[1]].effectiveWindow = myMsg->payload[3];
-                  if(sockets[myMsg->payload[1]].effectiveWindow < 1){
-                     sockets[myMsg->payload[1]].effectiveWindow++;
-                     dbg(TRANSPORT_CHANNEL, "Able to send another %d packet(s) from the effective window\n", sockets[myMsg->payload[1]].effectiveWindow);
+                  if(sockets[temp->destPort].effectiveWindow < 1){
+                     sockets[temp->destPort].effectiveWindow++;
+                     //dbg(TRANSPORT_CHANNEL, "Able to send another %d packet(s) from the effective window\n", sockets[myMsg->payload[1]].effectiveWindow);
                   }
-                  if(myMsg->payload[2] - sockets[myMsg->payload[1]].lastAck == 1){
-                     sockets[myMsg->payload[1]].lastAck = myMsg->payload[2];
-                     dbg(TRANSPORT_CHANNEL, "Received upto %d packet(s) \n", sockets[myMsg->payload[1]].lastAck);
+                  if(temp->seqNum - sockets[temp->destPort].lastAck == 1){
+                     sockets[temp->destPort].lastAck = temp->seqNum;
+                     dbg(TRANSPORT_CHANNEL, "Received upto %d packet(s) \n", sockets[temp->destPort].lastAck);
                      /*sockets[myMsg->payload[1]].nextExpected++;
                      if(sockets[myMsg->payload[1]].effectiveWindow > 0 && nextPacket <=1){
                         call TCP_Timeout.startOneShot( sockets[i].RTT * 2);
@@ -557,16 +567,19 @@ implementation{
          dbg(TRANSPORT_CHANNEL,"user %s\n", user);
 
          clientport = strtok(NULL, delimiter);
-         dbg(TRANSPORT_CHANNEL,"clientport %s\n", clientport);
+         dbg(TRANSPORT_CHANNEL,"clientport %d\n", clientPort);
          port = atoi(clientport);
          clientPort = port;
+         cmd = res1;;
          signal CommandHandler.setTestClient(port, 1, 1, user);
       }
       else if((uint8_t) strcmp(res1,"msg") == 0){
          message = strtok(NULL, "\n");
          dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
-         cmd = "msg";
-         call TCP_Timer.startOneShot(sockets[clientPort].RTT * 2);
+         cmd = res1;
+         dbg(TRANSPORT_CHANNEL,"clientPort: %s\n", clientPort);
+         //call TCP_Timer.startOneShot(sockets[clientPort].RTT * 2);
+         send_TCP(clientPort,1,1);
       }
       else if((uint8_t) strcmp(res1,"whisper") == 0){
           user = strtok(NULL, delimiter);
@@ -737,24 +750,35 @@ implementation{
    */
    void send_TCP(uint8_t srcPort, uint8_t dest_addr, uint8_t destPort){
          ConnectedClients data;
-         ConnectedClients data_address;
+         ConnectedClients *data_address;
          uint16_t nexHop = get_next_hop(dest_addr);
+         dbg(TRANSPORT_CHANNEL, "in here tcp send\n");
+         dbg(TRANSPORT_CHANNEL, "in here tcp send %s\n", cmd);
          //dbg(TRANSPORT_CHANNEL, "TCP Target Node: %d\n", dest_addr);
          //dbg(TRANSPORT_CHANNEL, "Sending seqNum: %d\n", nextPacket);
-         nextPacket++;
-         port_info[0] = srcPort;
-         port_info[1] = destPort;
-         port_info[2] = nextPacket;
-         port_info[3] = sockets[srcPort].effectiveWindow;
-         socket = srcPort;
-         //dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
-         makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
-         dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, port_info[0], dest_addr, port_info[1], nextPacket);
-         sockets[srcPort].effectiveWindow--;
-         dbg(TRANSPORT_CHANNEL, "Updated Effective Window after sending packet to receiver: %d\n", sockets[srcPort].effectiveWindow);
-         call Sender.send(sendPackage, nexHop);
-      
-      
+         if((uint8_t) strcmp(cmd,"msg") == 0){
+             dbg(TRANSPORT_CHANNEL, "in here\n");
+         }
+         else{
+            nextPacket++;
+            data.cmd = cmd;
+            data.srcPort = srcPort;
+            data.destPort = destPort;
+            data.seqNum = nextPacket;
+            data.effectiveWindow = sockets[srcPort].effectiveWindow;
+            data_address = &data;
+            // port_info[0] = srcPort;
+            // port_info[1] = destPort;
+            // port_info[2] = nextPacket;
+            // port_info[3] = sockets[srcPort].effectiveWindow;
+            //socket = srcPort;
+            //dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
+            makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
+            dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, data_address->srcPort, dest_addr, data_address->destPort, nextPacket);
+            sockets[srcPort].effectiveWindow--;
+            dbg(TRANSPORT_CHANNEL, "Updated Effective Window after sending packet to receiver: %d\n", sockets[srcPort].effectiveWindow);
+            call Sender.send(sendPackage, nexHop);
+         }
    }
 
    uint16_t get_next_hop(uint16_t dest_addr){

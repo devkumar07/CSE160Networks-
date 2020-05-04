@@ -305,6 +305,7 @@ implementation{
                   data.srcPort = temp->destPort;
                   data.destPort = temp->srcPort;
                   data.seqNum = temp->seqNum;
+                  data_address = &data;
                   // port_info[0] = myMsg->payload[1];
                   // port_info[1] = myMsg->payload[0];
                   // port_info[2] = myMsg->payload[2];
@@ -773,7 +774,7 @@ implementation{
             // port_info[3] = sockets[srcPort].effectiveWindow;
             //socket = srcPort;
             //dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
-            makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) port_info, PACKET_MAX_PAYLOAD_SIZE);
+            makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) data_address, PACKET_MAX_PAYLOAD_SIZE);
             dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, data_address->srcPort, dest_addr, data_address->destPort, nextPacket);
             sockets[srcPort].effectiveWindow--;
             dbg(TRANSPORT_CHANNEL, "Updated Effective Window after sending packet to receiver: %d\n", sockets[srcPort].effectiveWindow);

@@ -329,15 +329,17 @@ implementation{
                      dbg(TRANSPORT_CHANNEL, "message in tcp received: %s\n",temp->message);
                      for(i = 0; i < call ClientsDB.size(); i++){
                         ConnectedClients t = call ClientsDB.get(i);
-                        data.destPort = t.destPort;
-                        data.seqNum = temp->seqNum;
-                        data.message = temp->message;
-                        data.info = temp->info;
-                        data_address = &data;
-                        makePack(&sendPackage, TOS_NODE_ID, t.destNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
-                        next = get_next_hop(t.destNode);
-                        dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.destNode, data.destPort, temp->seqNum);
-                        call Sender.send(sendPackage, next);
+                        if(t.destNode != myMsg->src){
+                           data.destPort = t.destPort;
+                           data.seqNum = temp->seqNum;
+                           data.message = temp->message;
+                           data.info = temp->info;
+                           data_address = &data;
+                           makePack(&sendPackage, TOS_NODE_ID, t.destNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
+                           next = get_next_hop(t.destNode);
+                           dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.destNode, data.destPort, temp->seqNum);
+                           call Sender.send(sendPackage, next);
+                        }
                      }
                   }
                   else{

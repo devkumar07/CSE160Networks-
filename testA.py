@@ -35,6 +35,8 @@ def main():
     s.runTime(100);
     s.setClient(2,"hello devanshu 3\n");
     s.runTime(300);
+    s.setClient(3,"hello keerthana 3\n");
+    s.runTime(300);
     s.setClient(2,"msg hello World!\n");
     #s.setClient(2,"whisper devanshu hi!\n");
     #s.setClient(2,"listusr\n");

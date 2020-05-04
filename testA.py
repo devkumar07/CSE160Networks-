@@ -8,7 +8,7 @@ def main():
     s.runTime(1);
 
     # Load the the layout of the network.
-    s.loadTopo("pizza.topo");
+    s.loadTopo("long_line.topo");
 
     # Add a noise model to all of the motes.
     s.loadNoise("some_noise.txt");
@@ -32,19 +32,21 @@ def main():
     #s.runTime(200);
     #s.runTime(100);
     s.setServer(1,1);
-    s.runTime(100);
+    s.runTime(300);
     s.setClient(2,"hello devanshu 3\n");
-    s.runTime(100);
+    s.runTime(300);
     s.setClient(3,"hello keerthana 3\n");
-    s.runTime(100);
+    s.runTime(300);
     s.setClient(4,"hello John 3\n");
-    s.runTime(100);
+    s.runTime(300);
     s.setClient(2,"msg hello World!\n");
+    s.runTime(300);
+    s.setClient(3,"msg hate this class!\n");
     s.runTime(300);
     s.setClient(2,"whisper keerthana hi!\n");
     s.runTime(300);
     s.setClient(2,"listusr\n");
-    s.runTime(100);
+    s.runTime(300);
     #s.setClient(3,"hello keerthana 3\n");
     #s.runTime(50);
     """

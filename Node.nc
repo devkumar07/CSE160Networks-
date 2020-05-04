@@ -356,7 +356,7 @@ implementation{
                      dbg(TRANSPORT_CHANNEL, "message in WHISPER received: %s\n",temp->message);
                      for(i = 0; i < call ClientsDB.size(); i++){
                         ConnectedClients t = call ClientsDB.get(i);
-                        if(t.destNode != myMsg->src && strcmp(t.username, receiver) ==  0){
+                        if(t.srcNode != myMsg->src && strcmp(t.username, receiver) ==  0){
                            data.destPort = t.destPort;
                            data.srcPort = temp->destPort;
                            data.seqNum = temp->seqNum;
@@ -366,9 +366,9 @@ implementation{
                            data.info = temp->info;
                            data_address = &data;
                            dbg(TRANSPORT_CHANNEL, "%s is UNICASTING to client %s the message: %s\n", temp->username, t.username, temp->message);
-                           makePack(&sendPackage, TOS_NODE_ID, t.destNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
-                           next = get_next_hop(t.destNode);
-                           dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.destNode, data.destPort, temp->seqNum);
+                           makePack(&sendPackage, TOS_NODE_ID, t.srcNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
+                           next = get_next_hop(t.srcNode);
+                           dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.srcNode, data.destPort, temp->seqNum);
                            call Sender.send(sendPackage, next);
                         }
                      }
@@ -401,9 +401,9 @@ implementation{
                            data.info = temp->info;
                            data_address = &data;
                            dbg(TRANSPORT_CHANNEL, "SERVER node %d, port %d is sending client list to client %s\n", TOS_NODE_ID, temp->destPort, temp->username);
-                           makePack(&sendPackage, TOS_NODE_ID, t.destNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
-                           next = get_next_hop(t.destNode);
-                           dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.destNode, data.destPort, temp->seqNum);
+                           makePack(&sendPackage, TOS_NODE_ID, t.srcNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
+                           next = get_next_hop(t.srcNode);
+                           dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.srcNode, data.destPort, temp->seqNum);
                            call Sender.send(sendPackage, next);
                         }
                      }

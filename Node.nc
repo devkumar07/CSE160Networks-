@@ -248,7 +248,7 @@ implementation{
                      sockets[index].src = TOS_NODE_ID;
                      sockets[index].dest.addr = temp->srcNode;
                      sockets[index].dest.port = temp->srcPort;
-                     sockets[index].RTT = 8000;
+                     sockets[index].RTT = 15000;
                      call TCP_Timer.stop();
                      //dbg(TRANSPORT_CHANNEL, "Values assigned succesfully\n");
                      //call TCP_Timer.startOneShot(sockets[i].RTT * 2);
@@ -655,7 +655,7 @@ implementation{
       sockets[source_socket].dest.port = target_socket;
       user = (char *) data;
       dbg(TRANSPORT_CHANNEL, "User in setTestClient: %s\n", user);
-      sockets[source_socket].RTT = 8000;
+      sockets[source_socket].RTT = 15000;
       dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[source_socket].RTT);
       send_syn(source_socket, target_addr, target_socket);
    }

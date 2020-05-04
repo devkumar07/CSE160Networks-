@@ -299,7 +299,7 @@ implementation{
                   index = temp->destPort;
                   dbg(TRANSPORT_CHANNEL, "destPort: %d\n",index);
                   dbg(TRANSPORT_CHANNEL, "info: %d\n",temp->info);
-                 //dbg(TRANSPORT_CHANNEL, "sender: %s\n",temp->sender);
+                 dbg(TRANSPORT_CHANNEL, "username: %s\n",temp->username);
                   dbg(TRANSPORT_CHANNEL, "message: %s\n",temp->message);
                   if(sockets[temp->destPort].state == SYN_RCVD){
                      dbg(TRANSPORT_CHANNEL, "Changing receiver state to established\n");
@@ -331,8 +331,10 @@ implementation{
                         ConnectedClients t = call ClientsDB.get(i);
                         if(t.destNode != myMsg->src){
                            data.destPort = t.destPort;
+                           data.srcPort = temp->destPort;
                            data.seqNum = temp->seqNum;
                            data.message = temp->message;
+                           data.username = temp->username;
                            data.info = temp->info;
                            data_address = &data;
                            makePack(&sendPackage, TOS_NODE_ID, t.destNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
@@ -370,7 +372,7 @@ implementation{
                   dbg(TRANSPORT_CHANNEL, "ACK received from node %d port %d to node %d port %d for seqNum %d \n", myMsg->src, temp->srcPort, TOS_NODE_ID, temp->destPort, temp->seqNum);
                   //sockets[myMsg->payload[1]].effectiveWindow = myMsg->payload[3];
                   if(temp->info == 1){
-                     dbg(TRANSPORT_CHANNEL, "TCP Message was sent by a user containing message: %s\n", temp->message);
+                     dbg(TRANSPORT_CHANNEL, "%s is BROADCASTING the message: %s\n", temp->username, temp->message);
                   }
                   if(sockets[temp->destPort].effectiveWindow < 1){
                      sockets[temp->destPort].effectiveWindow++;
@@ -814,6 +816,7 @@ implementation{
             data.destPort = destPort;
             data.seqNum = nextPacket;
             data.info = instruction;
+            data.username = user;
             data.message = message;
             data_address = &data;
             // port_info[0] = srcPort;
@@ -834,6 +837,7 @@ implementation{
             data.destPort = destPort;
             data.seqNum = nextPacket;
             data.info = instruction;
+            data.username = user;
             data.message = "test";
             data_address = &data;
             // port_info[0] = srcPort;
@@ -841,7 +845,7 @@ implementation{
             // port_info[2] = nextPacket;
             // port_info[3] = sockets[srcPort].effectiveWindow;
             //socket = srcPort;
-            //dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
+            dbg(TRANSPORT_CHANNEL, "data.username: %s\n", data.username);
             makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) data_address, PACKET_MAX_PAYLOAD_SIZE);
             dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, data_address->srcPort, dest_addr, data_address->destPort, nextPacket);
             sockets[srcPort].effectiveWindow--;

@@ -34,6 +34,7 @@ def main():
     s.setServer(1,1);
     s.runTime(100);
     s.setClient(2,"hello devanshu 3\n");
+<<<<<<< HEAD
     s.runTime(400);
     s.setClient(3,"hello keerthana 3\n");
     s.runTime(400);
@@ -45,6 +46,19 @@ def main():
     #s.setClient(2,"whisper devanshu hi!\n");
     #s.setClient(2,"listusr\n");
     s.runTime(800);
+=======
+    s.runTime(100);
+    s.setClient(3,"hello keerthana 3\n");
+    s.runTime(100);
+    s.setClient(4,"hello John 3\n");
+    s.runTime(100);
+    s.setClient(2,"msg hello World!\n");
+    s.runTime(100);
+    s.setClient(2,"whisper keerthana hi!\n");
+    s.runTime(300);
+    s.setClient(2,"listusr\n");
+    s.runTime(100);
+>>>>>>> 483e291c6bf21e4f98bb86ad58f559434a60555c
     #s.setClient(3,"hello keerthana 3\n");
     #s.runTime(50);
     """

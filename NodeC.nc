@@ -30,6 +30,7 @@ typedef struct ConnectedClients{
 typedef struct ChatPackets{
    char *message;
    char *username;
+   //char *receiver;
    uint8_t info;
    uint8_t srcPort;
    uint8_t destPort;

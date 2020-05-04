@@ -43,7 +43,7 @@ implementation{
    uint8_t clientPort;
    char *user;
    char *message;
-   char *cmd = 'hello';
+   uint8_t instruction;
    // Prototypes
    void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t Protocol, uint16_t seq, uint8_t *payload, uint8_t length);
    bool checkExistsPacket(pack *Package);
@@ -293,17 +293,14 @@ implementation{
                   uint16_t next;
                   char *username;
                   uint8_t index;
-                  char *res;
-                  char *delimiter = " ";
-                  char *res1;
                   ChatPackets *temp = (ChatPackets*) myMsg->payload;
                   ChatPackets data;
                   ChatPackets *data_address;
-                  res = temp->info;
                   index = temp->destPort;
-                  res1 = strtok(res, delimiter);
                   dbg(TRANSPORT_CHANNEL, "destPort: %d\n",index);
-                  dbg(TRANSPORT_CHANNEL, "info: %s\n",res1);
+                  dbg(TRANSPORT_CHANNEL, "info: %d\n",temp->info);
+                 //dbg(TRANSPORT_CHANNEL, "sender: %s\n",temp->sender);
+                  dbg(TRANSPORT_CHANNEL, "message: %s\n",temp->message);
                   if(sockets[temp->destPort].state == SYN_RCVD){
                      dbg(TRANSPORT_CHANNEL, "Changing receiver state to established\n");
                      sockets[temp->destPort].state = ESTABLISHED;
@@ -323,30 +320,32 @@ implementation{
                      //dbg(TRANSPORT_CHANNEL, "IN TCP, client: %d, user : %s, client port: %d\n", port_info[4], username, port_info[6]);
                      makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
                      next = get_next_hop(myMsg->src);
+                     dbg(TRANSPORT_CHANNEL, "ACK init Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, myMsg->src, temp->srcPort, temp->seqNum);
+                     call Sender.send(sendPackage, next);
+                  }
+                  else if(temp->info == 1){
+                     dbg(TRANSPORT_CHANNEL, "in here tcp received\n");
+                  }
+                  else{
+                     data.srcPort = temp->destPort;
+                     data.destPort = temp->srcPort;
+                     data.seqNum = temp->seqNum;
+                     data_address = &data;
+                     // port_info[0] = myMsg->payload[1];
+                     // port_info[1] = myMsg->payload[0];
+                     // port_info[2] = myMsg->payload[2];
+                     // port_info[4] = myMsg->payload[4];
+                     // port_info[5] = myMsg->payload[5];
+                     // port_info[6] = myMsg->payload[6];
+
+                     //username = (char *)myMsg->payload[5];
+                     //dbg(TRANSPORT_CHANNEL, "IN TCP, user: %s\n", username);
+                     //dbg(TRANSPORT_CHANNEL, "IN TCP, client: %d, user : %s, client port: %d\n", port_info[4], username, port_info[6]);
+                     makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
+                     next = get_next_hop(myMsg->src);
                      dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, myMsg->src, temp->srcPort, temp->seqNum);
                      call Sender.send(sendPackage, next);
                   }
-                  if((uint8_t) strcmp(res1,"msg") == 0){
-                     dbg(TRANSPORT_CHANNEL, "in here\n");
-                  }
-                  data.srcPort = temp->destPort;
-                  data.destPort = temp->srcPort;
-                  data.seqNum = temp->seqNum;
-                  data_address = &data;
-                  // port_info[0] = myMsg->payload[1];
-                  // port_info[1] = myMsg->payload[0];
-                  // port_info[2] = myMsg->payload[2];
-                  // port_info[4] = myMsg->payload[4];
-                  // port_info[5] = myMsg->payload[5];
-                  // port_info[6] = myMsg->payload[6];
-
-                  //username = (char *)myMsg->payload[5];
-                  //dbg(TRANSPORT_CHANNEL, "IN TCP, user: %s\n", username);
-                  //dbg(TRANSPORT_CHANNEL, "IN TCP, client: %d, user : %s, client port: %d\n", port_info[4], username, port_info[6]);
-                  makePack(&sendPackage, TOS_NODE_ID, myMsg->src, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
-                  next = get_next_hop(myMsg->src);
-                  dbg(TRANSPORT_CHANNEL, "ACK Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, myMsg->src, temp->srcPort, temp->seqNum);
-                  call Sender.send(sendPackage, next);
                }
                else if (myMsg->protocol == PROTOCOL_ACK){
                    uint8_t k = 0;
@@ -598,7 +597,7 @@ implementation{
          dbg(TRANSPORT_CHANNEL,"clientport %d\n", clientPort);
          port = atoi(clientport);
          clientPort = port;
-         cmd = res1;
+         instruction = 0;
          message = res;
          dbg(TRANSPORT_CHANNEL,"res: %s\n", res);
          signal CommandHandler.setTestClient(port, 1, 1, user);
@@ -606,7 +605,7 @@ implementation{
       else if((uint8_t) strcmp(res1,"msg") == 0){
          message = strtok(NULL, "\n");
          dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
-         cmd = res1;
+         instruction = 1;
          dbg(TRANSPORT_CHANNEL,"clientPort: %d\n", clientPort);
          //call TCP_Timer.startOneShot(sockets[clientPort].RTT * 2);
          message = res;
@@ -783,19 +782,21 @@ implementation{
          ChatPackets data;
          ChatPackets *data_address;
          uint16_t nexHop = get_next_hop(dest_addr);
-         dbg(TRANSPORT_CHANNEL, "in here tcp send\n");
-         dbg(TRANSPORT_CHANNEL, "in here tcp send %s\n", cmd);
+         // dbg(TRANSPORT_CHANNEL, "in here tcp send\n");
+         // dbg(TRANSPORT_CHANNEL, "in here tcp send %s\n", cmd);
          //dbg(TRANSPORT_CHANNEL, "TCP Target Node: %d\n", dest_addr);
          //dbg(TRANSPORT_CHANNEL, "Sending seqNum: %d\n", nextPacket);
-         /*if((uint8_t) strcmp(cmd,"msg") == 0){
-             dbg(TRANSPORT_CHANNEL, "in here\n");
-         }*/
-         //else{
+         if(instruction == 1){
+             dbg(TRANSPORT_CHANNEL, "in here tcp_send\n");
+         }
+         else{
             nextPacket++;
             data.srcPort = srcPort;
             data.destPort = destPort;
             data.seqNum = nextPacket;
-            data.info = message;
+            data.info = instruction;
+            data.message = "test";
+            //data.sender = "devanshu kumar";
             data_address = &data;
             // port_info[0] = srcPort;
             // port_info[1] = destPort;
@@ -808,7 +809,7 @@ implementation{
             sockets[srcPort].effectiveWindow--;
             dbg(TRANSPORT_CHANNEL, "Updated Effective Window after sending packet to receiver: %d\n", sockets[srcPort].effectiveWindow);
             call Sender.send(sendPackage, nexHop);
-         //}
+         }
    }
 
    uint16_t get_next_hop(uint16_t dest_addr){

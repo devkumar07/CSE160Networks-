@@ -30,10 +30,13 @@ typedef struct ConnectedClients{
 } ConnectedClients;
 
 typedef struct ChatPackets{
-   char *info;
+   char *message;
+   //char *sender;
+   nx_uint16_t info;
    nx_uint16_t srcPort;
    nx_uint16_t destPort;
    nx_uint16_t seqNum;
+
 } ChatPackets;
 
 configuration NodeC{

@@ -325,6 +325,7 @@ implementation{
                   }
                   else if(temp->info == 1){
                      dbg(TRANSPORT_CHANNEL, "in here tcp received\n");
+                     dbg(TRANSPORT_CHANNEL, "message in tcp received: %s\n",temp->message);
                   }
                   else{
                      data.srcPort = temp->destPort;
@@ -608,7 +609,7 @@ implementation{
          instruction = 1;
          dbg(TRANSPORT_CHANNEL,"clientPort: %d\n", clientPort);
          //call TCP_Timer.startOneShot(sockets[clientPort].RTT * 2);
-         message = res;
+         //message = res;
          send_TCP(clientPort,1,1);
       }
       else if((uint8_t) strcmp(res1,"whisper") == 0){
@@ -782,12 +783,32 @@ implementation{
          ChatPackets data;
          ChatPackets *data_address;
          uint16_t nexHop = get_next_hop(dest_addr);
+         // char *t = "from dev";
+         // char *f;
          // dbg(TRANSPORT_CHANNEL, "in here tcp send\n");
          // dbg(TRANSPORT_CHANNEL, "in here tcp send %s\n", cmd);
          //dbg(TRANSPORT_CHANNEL, "TCP Target Node: %d\n", dest_addr);
          //dbg(TRANSPORT_CHANNEL, "Sending seqNum: %d\n", nextPacket);
          if(instruction == 1){
-             dbg(TRANSPORT_CHANNEL, "in here tcp_send\n");
+            dbg(TRANSPORT_CHANNEL, "in here tcp_send: %s\n", message);
+            nextPacket++;
+            data.srcPort = srcPort;
+            data.destPort = destPort;
+            data.seqNum = nextPacket;
+            data.info = instruction;
+            data.message = message;
+            data_address = &data;
+            // port_info[0] = srcPort;
+            // port_info[1] = destPort;
+            // port_info[2] = nextPacket;
+            // port_info[3] = sockets[srcPort].effectiveWindow;
+            //socket = srcPort;
+            //dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
+            makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) data_address, PACKET_MAX_PAYLOAD_SIZE);
+            dbg(TRANSPORT_CHANNEL, "TCP Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, data_address->srcPort, dest_addr, data_address->destPort, nextPacket);
+            sockets[srcPort].effectiveWindow--;
+            dbg(TRANSPORT_CHANNEL, "Updated Effective Window after sending packet to receiver: %d\n", sockets[srcPort].effectiveWindow);
+            call Sender.send(sendPackage, nexHop);
          }
          else{
             nextPacket++;
@@ -796,7 +817,6 @@ implementation{
             data.seqNum = nextPacket;
             data.info = instruction;
             data.message = "test";
-            //data.sender = "devanshu kumar";
             data_address = &data;
             // port_info[0] = srcPort;
             // port_info[1] = destPort;

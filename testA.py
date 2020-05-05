@@ -32,7 +32,7 @@ def main():
     #s.runTime(200);
     #s.runTime(100);
     s.setServer(1,1);
-    s.runTime(300);
+    s.runTime(500);
     s.setClient(2,"hello devanshu 3\n");
     s.runTime(300);
     s.setClient(3,"hello keerthana 3\n");
@@ -40,13 +40,15 @@ def main():
     s.setClient(4,"hello John 3\n");
     s.runTime(300);
     s.setClient(2,"msg hello World!\n");
-    s.runTime(300);
+    s.runTime(500);
     s.setClient(3,"msg hate this class!\n");
-    s.runTime(300);
+    s.runTime(500);
     s.setClient(2,"whisper keerthana hi!\n");
+    s.runTime(500);
+    s.setClient(3,"whisper devanshu hi!\n");
     s.runTime(300);
     s.setClient(2,"listusr\n");
-    s.runTime(300);
+    s.runTime(1000);
     #s.setClient(3,"hello keerthana 3\n");
     #s.runTime(50);
     """

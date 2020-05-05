@@ -93,23 +93,23 @@ implementation{
       //dbg(TRANSPORT_CHANNEL, "TCP_Timer fired function %d\n", TOS_NODE_ID);
       for(i = 0; i < MAX_NUM_OF_SOCKETS; i++){
          if(sockets[i].state == SYN_SENT){
-            dbg(TRANSPORT_CHANNEL, "In SYN_SYN\n");
+            //dbg(TRANSPORT_CHANNEL, "In SYN_SYN\n");
             ////printRoute();
             //call TCP_Timer.startOneShot(sockets[i].RTT * 2);
             send_syn(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
          }
          else if(sockets[i].state == SYN_RCVD){
             //sockets[i].state = ESTABLISHED;
-            dbg(TRANSPORT_CHANNEL, "In SYN_RCVD\n");
+            //dbg(TRANSPORT_CHANNEL, "In SYN_RCVD\n");
             //call TCP_Timer.startOneShot(sockets[i].RTT * 2);
             send_rcvd(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
          }
          else if(sockets[i].state == ESTABLISHED){
             //client
-            if (sockets[i].flag == TOS_NODE_ID && nextPacket < 1){
-               sockets[i].nextExpected = 1;
+           // if (sockets[i].flag == TOS_NODE_ID && nextPacket < 1){
+               sockets[i].nextExpected = nextPacket + sockets[i].effectiveWindow+1;
                send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
-            }
+            //}
          }
       }
    }
@@ -227,18 +227,28 @@ implementation{
                uint16_t i = 0;
                uint16_t j = 0;
                if (myMsg->protocol == PROTOCOL_SYN){
+                  uint8_t i = 0;
                   uint16_t next;
                   uint8_t index;
+                  uint8_t exists = 0;
                   ConnectedClients * temp = (ConnectedClients *)myMsg->payload;
                   ConnectedClients data;
                   index = temp->destPort;
                   user = temp->username;
                   //dbg(TRANSPORT_CHANNEL, "username in protocol_syn %s\n", temp->username);
                   //dbg(TRANSPORT_CHANNEL, "index in protocol_syn %d\n", index);
-                  data.username = user;
-                  data.srcNode = temp->srcNode;
-                  data.destPort = temp->srcPort;
-                  call ClientsDB.pushback(data);
+                  for(i = 0; i < call ClientsDB.size();i++){
+                     ConnectedClients t = call ClientsDB.get(i);
+                     if((uint8_t) strcmp(t.username,temp->username) == 0){
+                        exists = 1;
+                     }
+                  }
+                  if(exists == 0){
+                     data.username = user;
+                     data.srcNode = temp->srcNode;
+                     data.destPort = temp->srcPort;
+                     call ClientsDB.pushback(data);
+                  }
                   //dbg(TRANSPORT_CHANNEL, "clear\n");
                   if(sockets[index].state == LISTEN || sockets[index].state == ESTABLISHED){
                      //dbg(TRANSPORT_CHANNEL, "Syn Packet Arrived from Node %d for Port %d\n", myMsg->src, index);
@@ -248,8 +258,8 @@ implementation{
                      sockets[index].src = TOS_NODE_ID;
                      sockets[index].dest.addr = temp->srcNode;
                      sockets[index].dest.port = temp->srcPort;
-                     sockets[index].RTT = 15000;
-                     call TCP_Timer.stop();
+                     sockets[index].RTT = 4000;
+                     //call TCP_Timer.stop();
                      //dbg(TRANSPORT_CHANNEL, "Values assigned succesfully\n");
                      //call TCP_Timer.startOneShot(sockets[i].RTT * 2);
                      send_rcvd(sockets[index].src, sockets[index].dest.addr, sockets[index].dest.port);
@@ -267,7 +277,7 @@ implementation{
                   call TCP_Timer.stop();
                   sockets[index].state = ESTABLISHED;
                   sockets[index].effectiveWindow = 1;
-                  dbg(TRANSPORT_CHANNEL, "Connection ESTABLISHED for node %d in port %d\n", TOS_NODE_ID, index);
+                  //dbg(TRANSPORT_CHANNEL, "Connection ESTABLISHED for node %d in port %d\n", TOS_NODE_ID, index);
                   dbg(TRANSPORT_CHANNEL, "TCP SUCCESSFULLY CONNECTED! Hello %s\n", temp->username);
                   //dbg(TRANSPORT_CHANNEL, "Effective Window: %d\n", sockets[index].effectiveWindow);
                   if (sockets[index].flag == TOS_NODE_ID && nextPacket < 1){
@@ -296,13 +306,13 @@ implementation{
                   ChatPackets data;
                   ChatPackets *data_address;
                   index = temp->destPort;
-                  call TCP_Timer.stop();
+                  //call TCP_Timer.stop();
                //    dbg(TRANSPORT_CHANNEL, "destPort: %d\n",index);
                //    dbg(TRANSPORT_CHANNEL, "info: %d\n",temp->info);
                //   dbg(TRANSPORT_CHANNEL, "username: %s\n",temp->username);
                //    dbg(TRANSPORT_CHANNEL, "message: %s\n",temp->message);
                   if(sockets[temp->destPort].state == SYN_RCVD){
-                     dbg(TRANSPORT_CHANNEL, "Changing receiver state to established\n");
+                     //dbg(TRANSPORT_CHANNEL, "Changing receiver state to established\n");
                      sockets[temp->destPort].state = ESTABLISHED;
                      data.srcPort = temp->destPort;
                      data.destPort = temp->srcPort;
@@ -341,7 +351,7 @@ implementation{
                            data_address = &data;
                            makePack(&sendPackage, TOS_NODE_ID, t.srcNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
                            next = get_next_hop(t.srcNode);
-                           dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.srcNode, data.destPort, temp->seqNum);
+                           //dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.srcNode, data.destPort, temp->seqNum);
                            call TCP_Timer.startOneShot(sockets[temp->destPort].RTT * 2);
                            call Sender.send(sendPackage, next);
                         }
@@ -368,7 +378,7 @@ implementation{
                            //dbg(TRANSPORT_CHANNEL, "%s is UNICASTING to client %s the message: %s\n", temp->username, t.username, temp->message);
                            makePack(&sendPackage, TOS_NODE_ID, t.srcNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
                            next = get_next_hop(t.srcNode);
-                           dbg(TRANSPORT_CHANNEL, "ACK Whisper Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.srcNode, data.destPort, temp->seqNum);
+                           //dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.srcNode, data.destPort, temp->seqNum);
                            call Sender.send(sendPackage, next);
                         }
                      }
@@ -389,7 +399,7 @@ implementation{
                         }
                         
                      }
-                     dbg(TRANSPORT_CHANNEL, "list message: %s\n", temp->message);
+
                      for(i = 0; i < call ClientsDB.size(); i++){
                         ConnectedClients t = call ClientsDB.get(i);
                         if(strcmp(t.username, temp->username) == 0){
@@ -404,7 +414,6 @@ implementation{
                            makePack(&sendPackage, TOS_NODE_ID, t.srcNode, MAX_TTL, PROTOCOL_ACK, seqNum, (uint8_t *)data_address, PACKET_MAX_PAYLOAD_SIZE);
                            next = get_next_hop(t.srcNode);
                            //dbg(TRANSPORT_CHANNEL, "ACK Msg Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, temp->destPort, t.srcNode, data.destPort, temp->seqNum);
-                           call TCP_Timer.startOneShot(sockets[temp->destPort].RTT * 2);
                            call Sender.send(sendPackage, next);
                         }
                      }
@@ -452,7 +461,7 @@ implementation{
                   }
                   if(temp->seqNum - sockets[temp->destPort].lastAck == 1){
                      sockets[temp->destPort].lastAck = temp->seqNum;
-                     dbg(TRANSPORT_CHANNEL, "Received upto %d packet(s) \n", sockets[temp->destPort].lastAck);
+                     //dbg(TRANSPORT_CHANNEL, "Received upto %d packet(s) \n", sockets[temp->destPort].lastAck);
                      /*sockets[myMsg->payload[1]].nextExpected++;
                      if(sockets[myMsg->payload[1]].effectiveWindow > 0 && nextPacket <=1){
                         call TCP_Timeout.startOneShot( sockets[i].RTT * 2);
@@ -655,9 +664,9 @@ implementation{
       sockets[source_socket].dest.addr = target_addr;
       sockets[source_socket].dest.port = target_socket;
       user = (char *) data;
-      dbg(TRANSPORT_CHANNEL, "User in setTestClient: %s\n", user);
-      sockets[source_socket].RTT = 15000;
-      dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[source_socket].RTT);
+      //dbg(TRANSPORT_CHANNEL, "User in setTestClient: %s\n", user);
+      sockets[source_socket].RTT = 4000;
+      //dbg(GENERAL_CHANNEL, "RTT: %d\n", sockets[source_socket].RTT);
       send_syn(source_socket, target_addr, target_socket);
    }
 
@@ -691,7 +700,7 @@ implementation{
          clientPort = port;
          instruction = 0;
          message = res;
-        // dbg(TRANSPORT_CHANNEL,"res: %s\n", res);
+         //dbg(TRANSPORT_CHANNEL,"res: %s\n", res);
          signal CommandHandler.setTestClient(port, 1, 1, user);
       }
       else if((uint8_t) strcmp(res1,"msg") == 0){
@@ -830,8 +839,8 @@ implementation{
       ConnectedClients data;
       ConnectedClients * data_address;
       uint16_t nexHop = get_next_hop(dest_addr);
-      //dbg(GENERAL_CHANNEL, "Target Node: %d\n", dest_addr);
-      //dbg(GENERAL_CHANNEL, "Nexthop: %d\n", nexHop);
+      // dbg(GENERAL_CHANNEL, "Target Node: %d\n", dest_addr);
+      // dbg(GENERAL_CHANNEL, "Nexthop: %d\n", nexHop);
       data.username = user;
       data.srcPort = srcPort;
       data.destPort = destPort;
@@ -977,9 +986,9 @@ implementation{
             //socket = srcPort;
            // dbg(TRANSPORT_CHANNEL, "data.username: %s\n", data.username);
             makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) data_address, PACKET_MAX_PAYLOAD_SIZE);
-            //dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, data_address->srcPort, dest_addr, data_address->destPort, nextPacket);
+           // dbg(TRANSPORT_CHANNEL, "TCP Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, data_address->srcPort, dest_addr, data_address->destPort, nextPacket);
             sockets[srcPort].effectiveWindow--;
-            //dbg(TRANSPORT_CHANNEL, "Updated Effective Window after sending packet to receiver: %d\n", sockets[srcPort].effectiveWindow);
+           // dbg(TRANSPORT_CHANNEL, "Updated Effective Window after sending packet to receiver: %d\n", sockets[srcPort].effectiveWindow);
             call TCP_Timer.startOneShot(sockets[srcPort].RTT * 2);
             call Sender.send(sendPackage, nexHop);
          }

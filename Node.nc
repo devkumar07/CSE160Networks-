@@ -363,8 +363,8 @@ implementation{
                      char *names = temp->username;
                      char *usr = strtok(names, " ");
                      char *receiver = strtok(NULL, "\n");
-                      dbg(TRANSPORT_CHANNEL, "from %s to %s\n",usr, receiver);
-                      dbg(TRANSPORT_CHANNEL, "message in WHISPER received: %s\n",temp->message);
+                      //dbg(TRANSPORT_CHANNEL, "from %s to %s\n",usr, receiver);
+                      //dbg(TRANSPORT_CHANNEL, "message in WHISPER received: %s\n",temp->message);
                      for(i = 0; i < call ClientsDB.size(); i++){
                         ConnectedClients t = call ClientsDB.get(i);
                         if(t.srcNode != myMsg->src && strcmp(t.username, receiver) ==  0){
@@ -937,7 +937,7 @@ implementation{
             // port_info[2] = nextPacket;
             // port_info[3] = sockets[srcPort].effectiveWindow;
             //socket = srcPort;
-            dbg(TRANSPORT_CHANNEL, "message in send_tcp %s\n", data.username);
+            //dbg(TRANSPORT_CHANNEL, "message in send_tcp %s\n", data.username);
             makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) data_address, PACKET_MAX_PAYLOAD_SIZE);
             //dbg(TRANSPORT_CHANNEL, "TCP WHISPER Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, data_address->srcPort, dest_addr, data_address->destPort, nextPacket);
             sockets[srcPort].effectiveWindow--;

@@ -11,7 +11,7 @@ def main():
     s.loadTopo("long_line.topo");
 
     # Add a noise model to all of the motes.
-    s.loadNoise("some_noise.txt");
+    s.loadNoise("no_noise.txt");
 
     # Turn on all of the sensors.
     s.bootAll();
@@ -39,16 +39,18 @@ def main():
     s.runTime(300);
     s.setClient(4,"hello John 3\n");
     s.runTime(300);
+    s.setClient(5,"hello Smith 3\n");
+    s.runTime(300);
     s.setClient(2,"msg hello World!\n");
-    s.runTime(500);
+    s.runTime(300);
     s.setClient(3,"msg hate this class!\n");
-    s.runTime(500);
+    s.runTime(300);
     s.setClient(2,"whisper keerthana hi!\n");
-    s.runTime(500);
+    s.runTime(300);
     s.setClient(3,"whisper devanshu hi!\n");
     s.runTime(300);
     s.setClient(2,"listusr\n");
-    s.runTime(1000);
+    s.runTime(300);
     #s.setClient(3,"hello keerthana 3\n");
     #s.runTime(50);
     """

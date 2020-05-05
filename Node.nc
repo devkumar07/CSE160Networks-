@@ -362,8 +362,8 @@ implementation{
                      char *names = temp->username;
                      char *usr = strtok(names, " ");
                      char *receiver = strtok(NULL, "\n");
-                     // dbg(TRANSPORT_CHANNEL, "from %s to %s\n",usr, receiver);
-                     // dbg(TRANSPORT_CHANNEL, "message in WHISPER received: %s\n",temp->message);
+                      dbg(TRANSPORT_CHANNEL, "from %s to %s\n",usr, receiver);
+                      dbg(TRANSPORT_CHANNEL, "message in WHISPER received: %s\n",temp->message);
                      for(i = 0; i < call ClientsDB.size(); i++){
                         ConnectedClients t = call ClientsDB.get(i);
                         if(t.srcNode != myMsg->src && strcmp(t.username, receiver) ==  0){

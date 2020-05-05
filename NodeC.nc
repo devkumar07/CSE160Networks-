@@ -17,6 +17,24 @@ typedef nx_struct RouteNode{
    nx_uint16_t cost;
 } RouteNode;
 
+typedef struct ConnectedClients{
+   char *username;
+   nx_uint16_t srcNode;
+   nx_uint16_t srcPort;
+   nx_uint16_t destPort;
+   nx_uint16_t seqNum;
+} ConnectedClients;
+
+typedef struct ChatPackets{
+   char *message;
+   char *username;
+   //char *receiver;
+   uint8_t info;
+   uint8_t srcPort;
+   uint8_t destPort;
+   uint8_t seqNum;
+
+} ChatPackets;
 
 configuration NodeC{
 }
@@ -58,4 +76,7 @@ implementation {
 
     components new ListC(RouteNode, 255) as RouteTableC;
     Node.RouteTable -> RouteTableC;
+
+    components new ListC(ConnectedClients, 255) as ConnectedClientsC;
+    Node.ClientsDB -> ConnectedClientsC;
 }

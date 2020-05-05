@@ -37,11 +37,11 @@ def main():
     s.runTime(500);
     s.setClient(3,"hello keerthana 3\n");
     s.runTime(500);
-    s.setClient(4,"hello John 3\n");
+    s.setClient(7,"hello John 3\n");
     s.runTime(500);
     s.setClient(2,"msg hello World!\n");
     s.runTime(500);
-    s.setClient(2,"whisper keerthana hi!\n");
+    s.setClient(7,"whisper keerthana hi!\n");
     s.runTime(500);
     s.setClient(2,"listusr\n");
     s.runTime(500);

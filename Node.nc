@@ -720,7 +720,7 @@ implementation{
           strcat(user, receiver);
           instruction = 2;
           message = strtok(NULL, "\n");
-          dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
+          //dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
 
           send_TCP(clientPort,1,1);
       }

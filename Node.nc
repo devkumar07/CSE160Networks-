@@ -106,10 +106,11 @@ implementation{
          }
          else if(sockets[i].state == ESTABLISHED){
             //client
-           // if (sockets[i].flag == TOS_NODE_ID && nextPacket < 1){
+            if (sockets[i].flag == TOS_NODE_ID && nextPacket < 1){
+               dbg(TRANSPORT_CHANNEL, "Timeout, retransmitting\n");
                sockets[i].nextExpected = nextPacket + sockets[i].effectiveWindow+1;
                send_TCP(sockets[i].src, sockets[i].dest.addr, sockets[i].dest.port);
-            //}
+            }
          }
       }
    }
@@ -719,7 +720,7 @@ implementation{
           strcat(user, receiver);
           instruction = 2;
           message = strtok(NULL, "\n");
-          //dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
+          dbg(TRANSPORT_CHANNEL,"message: %s\n", message);
 
           send_TCP(clientPort,1,1);
       }
@@ -936,7 +937,7 @@ implementation{
             // port_info[2] = nextPacket;
             // port_info[3] = sockets[srcPort].effectiveWindow;
             //socket = srcPort;
-            //dbg(TRANSPORT_CHANNEL, "Frame %d\n", port_info[2]);
+            dbg(TRANSPORT_CHANNEL, "message in send_tcp %s\n", data.username);
             makePack(&sendPackage, TOS_NODE_ID, dest_addr, MAX_TTL, PROTOCOL_TCP, seqNum, (uint8_t *) data_address, PACKET_MAX_PAYLOAD_SIZE);
             //dbg(TRANSPORT_CHANNEL, "TCP WHISPER Packet sent from Node %d, port %d to Node %d,Port %d with seqNum:%d\n", TOS_NODE_ID, data_address->srcPort, dest_addr, data_address->destPort, nextPacket);
             sockets[srcPort].effectiveWindow--;
